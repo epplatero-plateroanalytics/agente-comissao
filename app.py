@@ -6,83 +6,72 @@ import pdfkit
 import tempfile
 from datetime import datetime
 
-# ---------------------------
-# CONFIGURAÇÃO GERAL
-# ---------------------------
 st.set_page_config(page_title="Universal Analytics Agent", layout="wide")
 
-# ---------------------------
-# TEXTOS BILÍNGUES
-# ---------------------------
 T = {
     "pt": {
-        "app_title": "Agente Universal de Planilhas – Versão Premium",
-        "app_subtitle": "Envie uma planilha e gere análises avançadas, insights e relatório em PDF.",
+        "app_title": "Agente Universal de Planilhas – Versao Premium",
+        "app_subtitle": "Envie uma planilha e gere analises avancadas, insights e relatorio em PDF.",
         "language_label": "🌐 Idioma",
-        "lang_pt": "Português",
-        "lang_en": "Inglês",
+        "lang_pt": "Portugues",
+        "lang_en": "Ingles",
         "upload_label": "Selecione um arquivo",
-        "upload_hint": "Envie uma planilha para começar.",
+        "upload_hint": "Envie uma planilha para comecar.",
         "error_read": "Erro ao ler o arquivo.",
-        "error_empty": "A planilha está vazia.",
+        "error_empty": "A planilha esta vazia.",
         "warn_dup_cols": "Colunas duplicadas detectadas. Renomeando automaticamente.",
-        "preview_title": "Prévia dos dados",
+        "preview_title": "Previa dos dados",
         "types_title": "Tipos de colunas detectados",
-        "num_cols": "Numéricas",
+        "num_cols": "Numericas",
         "date_cols": "Datas",
-        "cat_cols": "Categóricas",
-        "filters_title": "Filtros avançados",
+        "cat_cols": "Categoricas",
+        "filters_title": "Filtros avancados",
         "filter_date_range": "Intervalo de datas",
-        "filter_year": "Ano",
-        "filter_month": "Mês",
         "filter_category": "Categoria",
         "filter_category_mode": "Modo de filtro de texto",
-        "filter_contains": "Contém",
-        "filter_starts": "Começa com",
+        "filter_contains": "Contem",
+        "filter_starts": "Comeca com",
         "filter_equals": "Igual a",
-        "filter_numeric": "Filtro numérico",
-        "filter_numeric_col": "Coluna numérica",
+        "filter_numeric": "Filtro numerico",
+        "filter_numeric_col": "Coluna numerica",
         "filter_numeric_range": "Intervalo de valores",
         "filter_outliers": "Remover outliers (IQR)",
-        "apply_filters": "Aplicar filtros",
-        "insights_title": "🧠 Insights automáticos e estatística descritiva",
-        "stats_title": "Estatísticas descritivas",
-        "corr_title": "Matriz de correlação entre variáveis numéricas",
+        "insights_title": "🧠 Insights automaticos e estatistica descritiva",
+        "stats_title": "Estatisticas descritivas",
+        "corr_title": "Matriz de correlacao entre variaveis numericas",
         "top_cat_title": "Top 5 categorias em {cat} por soma de {val}",
         "insights_list_title": "Insights em linguagem natural",
-        "outliers_title": "Outliers (método IQR)",
-        "no_num_cols": "Não há colunas numéricas suficientes para estatísticas descritivas.",
-        "no_outliers_info": "Não foi possível calcular outliers.",
-        "viz_title": "📊 Visualizações",
-        "select_num_col": "Selecione uma coluna numérica para análise detalhada",
-        "hist_title": "Distribuição de {col}",
+        "outliers_title": "Outliers (metodo IQR)",
+        "no_num_cols": "Nao ha colunas numericas suficientes para estatisticas descritivas.",
+        "no_outliers_info": "Nao foi possivel calcular outliers.",
+        "viz_title": "📊 Visualizacoes",
+        "select_num_col": "Selecione uma coluna numerica para analise detalhada",
+        "hist_title": "Distribuicao de {col}",
         "box_title": "Boxplot de {col} por {cat}",
         "bar_title": "Soma de {col} por {cat}",
-        "line_title": "Evolução de {col} ao longo do tempo",
-        "pdf_title_section": "📄 Gerar relatório PDF (Layout Profissional)",
+        "line_title": "Evolucao de {col} ao longo do tempo",
+        "pdf_title_section": "📄 Gerar relatorio PDF (Layout Profissional)",
         "pdf_button": "Gerar PDF",
         "pdf_success": "PDF gerado com sucesso!",
         "pdf_download": "Baixar PDF",
-        "pdf_cover_title": "Relatório Analítico",
+        "pdf_cover_title": "Relatorio Analitico",
         "pdf_cover_sub": "Gerado em {date}",
         "pdf_cover_brand": "Platero Analytics — Data Intelligence",
-        "pdf_summary": "Sumário",
-        "pdf_sum_1": "1. Estatísticas descritivas",
-        "pdf_sum_2": "2. Insights automáticos",
+        "pdf_summary": "Sumario",
+        "pdf_sum_1": "1. Estatisticas descritivas",
+        "pdf_sum_2": "2. Insights automaticos",
         "pdf_sum_3": "3. Outliers",
-        "pdf_sum_4": "4. Gráficos",
-        "pdf_sum_5": "5. Primeiras linhas da planilha",
-        "pdf_stats_section": "1. Estatísticas descritivas",
-        "pdf_insights_section": "2. Insights automáticos",
-        "pdf_outliers_section": "3. Outliers (método IQR)",
-        "pdf_charts_section": "4. Gráficos",
-        "pdf_table_section": "5. Primeiras linhas da planilha",
-        "footer_text": "Platero Analytics — Página [page]",
-        "insight_num": "Em {col}, a média é {mean:,.2f}, mediana {median:,.2f}, desvio padrão {std:,.2f}, mínimo {min:,.2f} e máximo {max:,.2f}.",
-        "insight_period": "O período analisado vai de {start} até {end}.",
-        "insight_topcat": "As 5 principais categorias em {cat}, considerando a soma de {val}, foram calculadas para destacar concentrações.",
-        "insight_corr": "Foi calculada a correlação entre as variáveis numéricas para identificar relações lineares.",
-        "insight_outliers": "Em {col}, foram detectados {qtd} possíveis outliers usando o método IQR."
+        "pdf_sum_4": "4. Primeiras linhas da planilha",
+        "pdf_stats_section": "1. Estatisticas descritivas",
+        "pdf_insights_section": "2. Insights automaticos",
+        "pdf_outliers_section": "3. Outliers (metodo IQR)",
+        "pdf_table_section": "4. Primeiras linhas da planilha",
+        "footer_text": "Platero Analytics — Pagina [page]",
+        "insight_num": "Em {col}, a media e {mean:,.2f}, mediana {median:,.2f}, desvio padrao {std:,.2f}, minimo {min:,.2f} e maximo {max:,.2f}.",
+        "insight_period": "O periodo analisado vai de {start} ate {end}.",
+        "insight_topcat": "As 5 principais categorias em {cat}, considerando a soma de {val}, foram calculadas para destacar concentracoes.",
+        "insight_corr": "Foi calculada a correlacao entre as variaveis numericas para identificar relacoes lineares.",
+        "insight_outliers": "Em {col}, foram detectados {qtd} possiveis outliers usando o metodo IQR."
     },
     "en": {
         "app_title": "Universal Spreadsheet Agent – Premium Version",
@@ -102,8 +91,6 @@ T = {
         "cat_cols": "Categorical",
         "filters_title": "Advanced filters",
         "filter_date_range": "Date range",
-        "filter_year": "Year",
-        "filter_month": "Month",
         "filter_category": "Category",
         "filter_category_mode": "Text filter mode",
         "filter_contains": "Contains",
@@ -113,7 +100,6 @@ T = {
         "filter_numeric_col": "Numeric column",
         "filter_numeric_range": "Value range",
         "filter_outliers": "Remove outliers (IQR)",
-        "apply_filters": "Apply filters",
         "insights_title": "🧠 Automatic insights and descriptive statistics",
         "stats_title": "Descriptive statistics",
         "corr_title": "Correlation matrix between numeric variables",
@@ -139,13 +125,11 @@ T = {
         "pdf_sum_1": "1. Descriptive statistics",
         "pdf_sum_2": "2. Automatic insights",
         "pdf_sum_3": "3. Outliers",
-        "pdf_sum_4": "4. Charts",
-        "pdf_sum_5": "5. First rows of the spreadsheet",
+        "pdf_sum_4": "4. First rows of the spreadsheet",
         "pdf_stats_section": "1. Descriptive statistics",
         "pdf_insights_section": "2. Automatic insights",
         "pdf_outliers_section": "3. Outliers (IQR method)",
-        "pdf_charts_section": "4. Charts",
-        "pdf_table_section": "5. First rows of the spreadsheet",
+        "pdf_table_section": "4. First rows of the spreadsheet",
         "footer_text": "Platero Analytics — Page [page]",
         "insight_num": "For {col}, the mean is {mean:,.2f}, median {median:,.2f}, standard deviation {std:,.2f}, minimum {min:,.2f} and maximum {max:,.2f}.",
         "insight_period": "The analyzed period goes from {start} to {end}.",
@@ -155,9 +139,6 @@ T = {
     }
 }
 
-# ---------------------------
-# FUNÇÕES AUXILIARES
-# ---------------------------
 def format_date(dt, lang):
     if pd.isna(dt):
         return ""
@@ -168,10 +149,8 @@ def format_date(dt, lang):
 
 def apply_advanced_filters(df, datas, categoricas, numericas, lang):
     df_f = df.copy()
-
     st.subheader(T[lang]["filters_title"])
 
-    # Filtro de datas
     if datas:
         col_data = datas[0]
         min_date = df_f[col_data].min()
@@ -185,7 +164,6 @@ def apply_advanced_filters(df, datas, categoricas, numericas, lang):
             df_f = df_f[(df_f[col_data] >= pd.to_datetime(start)) &
                         (df_f[col_data] <= pd.to_datetime(end))]
 
-    # Filtro de categoria
     if categoricas:
         col_cat = categoricas[0]
         st.markdown(f"**{T[lang]['filter_category']}:** {col_cat}")
@@ -212,7 +190,6 @@ def apply_advanced_filters(df, datas, categoricas, numericas, lang):
                     mask = mask | (df_f[col_cat].astype(str) == val)
             df_f = df_f[mask]
 
-    # Filtro numérico
     if numericas:
         st.subheader(T[lang]["filter_numeric"])
         col_num = st.selectbox(T[lang]["filter_numeric_col"], numericas)
@@ -226,7 +203,6 @@ def apply_advanced_filters(df, datas, categoricas, numericas, lang):
         )
         df_f = df_f[(df_f[col_num] >= val_range[0]) & (df_f[col_num] <= val_range[1])]
 
-        # Remover outliers
         remove_out = st.checkbox(T[lang]["filter_outliers"])
         if remove_out:
             q1 = df_f[col_num].quantile(0.25)
@@ -239,10 +215,7 @@ def apply_advanced_filters(df, datas, categoricas, numericas, lang):
     st.markdown("---")
     return df_f
 
-# ---------------------------
-# TOGGLE DE IDIOMA
-# ---------------------------
-col_lang1, col_lang2 = st.columns([1, 3])
+col_lang1, _ = st.columns([1, 3])
 with col_lang1:
     lang = st.radio(
         T["pt"]["language_label"],
@@ -253,9 +226,6 @@ with col_lang1:
 st.title(T[lang]["app_title"])
 st.write(T[lang]["app_subtitle"])
 
-# ---------------------------
-# UPLOAD
-# ---------------------------
 arquivo = st.file_uploader(T[lang]["upload_label"], type=["xlsx", "csv"], key="upload_unico")
 
 if not arquivo:
@@ -285,9 +255,6 @@ if df.columns.duplicated().any():
     df.columns = [f"{col}_{i}" if df.columns.tolist().count(col) > 1 else col
                   for i, col in enumerate(df.columns)]
 
-# ---------------------------
-# CONVERSÃO AUTOMÁTICA
-# ---------------------------
 datas = []
 for col in df.columns:
     try:
@@ -307,9 +274,6 @@ for col in df.columns:
 numericas = df.select_dtypes(include=["int64", "float64"]).columns.tolist()
 categoricas = df.select_dtypes(include=["object", "category"]).columns.tolist()
 
-# ---------------------------
-# PRÉVIA E TIPOS
-# ---------------------------
 st.subheader(T[lang]["preview_title"])
 st.dataframe(df.head())
 
@@ -319,14 +283,8 @@ c1.write(f"**{T[lang]['num_cols']}:** {numericas if numericas else '-'}")
 c2.write(f"**{T[lang]['date_cols']}:** {datas if datas else '-'}")
 c3.write(f"**{T[lang]['cat_cols']}:** {categoricas if categoricas else '-'}")
 
-# ---------------------------
-# APLICAÇÃO DE FILTROS AVANÇADOS
-# ---------------------------
 df_filtered = apply_advanced_filters(df, datas, categoricas, numericas, lang)
 
-# ---------------------------
-# INSIGHTS + ESTATÍSTICA
-# ---------------------------
 st.header(T[lang]["insights_title"])
 
 insights = []
@@ -384,7 +342,6 @@ if categoricas and numericas:
         T[lang]["insight_topcat"].format(cat=col_cat, val=col_val)
     )
 
-# Outliers via IQR
 if numericas:
     outliers_info = "<ul>"
     for col in numericas:
@@ -397,7 +354,10 @@ if numericas:
         lim_inf = q1 - 1.5 * iqr
         lim_sup = q3 + 1.5 * iqr
         qtd_out = serie[(serie < lim_inf) | (serie > lim_sup)].shape[0]
-        outliers_info += f"<li>{col}: {qtd_out} possíveis outliers detectados (IQR).</li>" if lang == "pt" else f"<li>{col}: {qtd_out} potential outliers detected (IQR).</li>"
+        if lang == "pt":
+            outliers_info += f"<li>{col}: {qtd_out} possiveis outliers detectados (IQR).</li>"
+        else:
+            outliers_info += f"<li>{col}: {qtd_out} potential outliers detected (IQR).</li>"
         if qtd_out > 0:
             insights.append(
                 T[lang]["insight_outliers"].format(col=col, qtd=qtd_out)
@@ -408,26 +368,18 @@ st.subheader(T[lang]["insights_list_title"])
 for item in insights:
     st.write("- " + item)
 
-# ---------------------------
-# GRÁFICOS
-# ---------------------------
 st.header(T[lang]["viz_title"])
-
-graficos_html = ""
 
 if numericas:
     col_num = st.selectbox(T[lang]["select_num_col"], numericas)
 
-    # Histograma
     fig_hist = px.histogram(
         df_filtered, x=col_num,
         nbins=30,
         title=T[lang]["hist_title"].format(col=col_num)
     )
     st.plotly_chart(fig_hist, use_container_width=True)
-    graficos_html += fig_hist.to_html(full_html=False)
 
-    # Boxplot
     if categoricas:
         col_cat_box = categoricas[0]
         fig_box = px.box(
@@ -435,9 +387,7 @@ if numericas:
             title=T[lang]["box_title"].format(col=col_num, cat=col_cat_box)
         )
         st.plotly_chart(fig_box, use_container_width=True)
-        graficos_html += fig_box.to_html(full_html=False)
 
-    # Barras
     if categoricas:
         col_cat_bar = categoricas[0]
         df_bar = df_filtered.groupby(col_cat_bar)[col_num].sum().reset_index()
@@ -446,9 +396,7 @@ if numericas:
             title=T[lang]["bar_title"].format(col=col_num, cat=col_cat_bar)
         )
         st.plotly_chart(fig_bar, use_container_width=True)
-        graficos_html += fig_bar.to_html(full_html=False)
 
-# Série temporal
 if datas and numericas:
     col_data = datas[0]
     col_valor = numericas[0]
@@ -459,11 +407,7 @@ if datas and numericas:
             title=T[lang]["line_title"].format(col=col_valor)
         )
         st.plotly_chart(fig_line, use_container_width=True)
-        graficos_html += fig_line.to_html(full_html=False)
 
-# ---------------------------
-# PDF PROFISSIONAL
-# ---------------------------
 st.header(T[lang]["pdf_title_section"])
 
 if st.button(T[lang]["pdf_button"]):
@@ -546,7 +490,6 @@ if st.button(T[lang]["pdf_button"]):
     <p>{T[lang]["pdf_sum_2"]}</p>
     <p>{T[lang]["pdf_sum_3"]}</p>
     <p>{T[lang]["pdf_sum_4"]}</p>
-    <p>{T[lang]["pdf_sum_5"]}</p>
 
     <h2>{T[lang]["pdf_stats_section"]}</h2>
     {estatisticas_html if estatisticas_html else f"<p>{T[lang]['no_num_cols']}</p>"}
@@ -556,9 +499,6 @@ if st.button(T[lang]["pdf_button"]):
 
     <h2>{T[lang]["pdf_outliers_section"]}</h2>
     {outliers_info if outliers_info else f"<p>{T[lang]['no_outliers_info']}</p>"}
-
-    <h2>{T[lang]["pdf_charts_section"]}</h2>
-    {graficos_html}
 
     <h2>{T[lang]["pdf_table_section"]}</h2>
     {df_filtered.head().to_html()}
