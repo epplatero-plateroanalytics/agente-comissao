@@ -113,4 +113,4 @@ def gerar_pdf(df, df_filtrado, datas, numericas, categoricas, figs, lang="pt"):
     # ---------------------------
     # RETORNAR PDF
     # ---------------------------
-    return pdf.output(dest="S").encode("latin1")
+    return bytes(pdf.output(dest="S"))
