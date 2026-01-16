@@ -1,13 +1,14 @@
 import pandas as pd
 import numpy as np
+import re
 
 def limpar_planilha(df):
     """
-    Limpeza universal — versão TITANIUM.
-    - Remove objetos e converte tudo para string antes de qualquer .str
+    Limpeza universal — versão ABSOLUTA (sem .str)
     - Cabeçalho inteligente
     - Conversão numérica segura
     - Conversão de datas segura
+    - Nenhum uso de .str (evita todos os erros)
     """
 
     # 1. Remover linhas totalmente vazias
@@ -20,9 +21,9 @@ def limpar_planilha(df):
         return df
 
     # ---------------------------------------------------------
-    # 3. Converter absolutamente TUDO para string imediatamente
+    # 3. Converter tudo para string de forma segura
     # ---------------------------------------------------------
-    df = df.astype(str)
+    df = df.applymap(lambda x: "" if pd.isna(x) else str(x))
 
     # ---------------------------------------------------------
     # 4. Detectar automaticamente a linha do cabeçalho real
@@ -31,15 +32,10 @@ def limpar_planilha(df):
     melhor_score = -9999
 
     for i in range(min(20, len(df))):
-        linha = df.iloc[i]
+        linha = df.iloc[i].tolist()
 
-        textos = linha.str.contains("[A-Za-z]", regex=True).sum()
-        numeros = (
-            linha.str.replace(",", ".", regex=False)
-                 .str.replace(".", "", regex=False)
-                 .str.isnumeric()
-                 .sum()
-        )
+        textos = sum(1 for v in linha if re.search(r"[A-Za-z]", v))
+        numeros = sum(1 for v in linha if re.fullmatch(r"-?\d+([.,]\d+)?", v))
 
         score = textos - numeros
 
@@ -50,17 +46,12 @@ def limpar_planilha(df):
     # ---------------------------------------------------------
     # 5. Definir cabeçalho real
     # ---------------------------------------------------------
-    df.columns = (
-        df.iloc[melhor_linha]
-        .astype(str)
-        .fillna("")
-        .str.strip()
-    )
+    df.columns = [c.strip() for c in df.iloc[melhor_linha].tolist()]
     df = df.iloc[melhor_linha + 1 :]
 
     # 6. Normalizar nomes de colunas
     df.columns = [
-        str(c).strip() if c not in ["", None, np.nan] else f"coluna_{i}"
+        c if c not in ["", None, np.nan] else f"coluna_{i}"
         for i, c in enumerate(df.columns)
     ]
 
@@ -71,44 +62,31 @@ def limpar_planilha(df):
     ]
 
     # ---------------------------------------------------------
-    # 8. Converter tudo para string novamente (garantia)
+    # 8. Converter números (sem .str)
     # ---------------------------------------------------------
     for col in df.columns:
-        df[col] = df[col].astype(str)
+        def parse_num(x):
+            x = x.replace(".", "").replace(",", ".")
+            return pd.to_numeric(x, errors="coerce")
 
-    # ---------------------------------------------------------
-    # 9. Converter números com vírgula (somente se parecer número)
-    # ---------------------------------------------------------
-    for col in df.columns:
-        serie = df[col]
-
-        numeric_like = (
-            serie.str.replace(".", "", regex=False)
-                 .str.replace(",", ".", regex=False)
-                 .str.match(r"^-?\d+(\.\d+)?$")
-                 .mean()
-        )
+        # Detectar se a coluna é majoritariamente numérica
+        numeric_like = sum(
+            1 for v in df[col] if re.fullmatch(r"-?\d+([.,]\d+)?", v)
+        ) / len(df[col])
 
         if numeric_like > 0.4:
-            df[col] = (
-                serie.str.replace(".", "", regex=False)
-                     .str.replace(",", ".", regex=False)
-            )
-            df[col] = pd.to_numeric(df[col], errors="coerce")
+            df[col] = df[col].apply(parse_num)
 
     # ---------------------------------------------------------
-    # 10. Converter datas (somente se NÃO for numérica)
+    # 9. Converter datas (sem .str)
     # ---------------------------------------------------------
     for col in df.columns:
         if pd.api.types.is_numeric_dtype(df[col]):
             continue
 
-        serie = df[col]
-
-        date_like = serie.str.contains(
-            r"\d{1,4}[-/]\d{1,2}[-/]\d{1,4}",
-            regex=True
-        ).mean()
+        date_like = sum(
+            1 for v in df[col] if re.search(r"\d{1,4}[-/]\d{1,2}[-/]\d{1,4}", v)
+        ) / len(df[col])
 
         if date_like > 0.3:
             try:
@@ -116,7 +94,7 @@ def limpar_planilha(df):
             except:
                 pass
 
-    # 11. Remover linhas vazias
+    # 10. Remover linhas vazias
     df = df.dropna(how="all").reset_index(drop=True)
 
     return df
