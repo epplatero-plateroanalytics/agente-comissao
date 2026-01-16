@@ -3,12 +3,12 @@ import numpy as np
 
 def limpar_planilha(df):
     """
-    Limpeza automática universal — versão ULTRA PRO.
-    Agora com:
+    Limpeza automática universal — versão ULTRA PRO FINAL.
     - Cabeçalho inteligente
-    - Conversão numérica robusta
-    - Conversão de datas segura (sem falsos positivos)
+    - Conversão numérica segura
+    - Conversão de datas segura
     - Proteção contra números virarem datas
+    - Nenhum uso de .str sem garantir string antes
     """
 
     # 1. Remover linhas totalmente vazias
@@ -67,18 +67,25 @@ def limpar_planilha(df):
     ]
 
     # ---------------------------------------------------------
-    # 7. PRIMEIRO: Converter números com vírgula
+    # 7. Converter TODAS as colunas para string antes de qualquer .str
     # ---------------------------------------------------------
     for col in df.columns:
-        serie = df[col].astype(str)
+        df[col] = df[col].astype(str)
+
+    # ---------------------------------------------------------
+    # 8. Converter números com vírgula (somente se parecer número)
+    # ---------------------------------------------------------
+    for col in df.columns:
+        serie = df[col]
 
         # Detectar se a coluna é majoritariamente numérica
-        numeric_like = serie.str.replace(".", "", regex=False)\
-                            .str.replace(",", ".", regex=False)\
-                            .str.match(r"^-?\d+(\.\d+)?$")\
-                            .mean()
+        numeric_like = (
+            serie.str.replace(".", "", regex=False)
+                 .str.replace(",", ".", regex=False)
+                 .str.match(r"^-?\d+(\.\d+)?$")
+                 .mean()
+        )
 
-        # Se mais de 40% dos valores parecem números → tratar como número
         if numeric_like > 0.4:
             df[col] = (
                 serie.str.replace(".", "", regex=False)
@@ -87,25 +94,26 @@ def limpar_planilha(df):
             df[col] = pd.to_numeric(df[col], errors="coerce")
 
     # ---------------------------------------------------------
-    # 8. DEPOIS: Converter datas (somente se NÃO for numérica)
+    # 9. Converter datas (somente se NÃO for numérica)
     # ---------------------------------------------------------
     for col in df.columns:
         if pd.api.types.is_numeric_dtype(df[col]):
-            continue  # nunca tentar converter números em datas
+            continue
 
-        serie = df[col].astype(str)
+        serie = df[col]
 
-        # Detectar se a coluna parece data
-        date_like = serie.str.contains(r"\d{1,4}[-/]\d{1,2}[-/]\d{1,4}", regex=True).mean()
+        date_like = serie.str.contains(
+            r"\d{1,4}[-/]\d{1,2}[-/]\d{1,4}",
+            regex=True
+        ).mean()
 
-        # Só converter se pelo menos 30% dos valores parecem datas
         if date_like > 0.3:
             try:
                 df[col] = pd.to_datetime(df[col], dayfirst=True, errors="coerce")
             except:
                 pass
 
-    # 9. Remover linhas vazias
+    # 10. Remover linhas vazias
     df = df.dropna(how="all").reset_index(drop=True)
 
     return df
