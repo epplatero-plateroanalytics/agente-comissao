@@ -44,8 +44,8 @@ def aplicar_filtros(df, datas, numericas, categoricas):
                     value=(minimo, maximo)
                 )
 
-              def aplicar_filtros(df):
+             def aplicar_filtros(df):
     # ... lógica de filtros ...
     # (Seu código de filtro aqui)
     
-    return df  #  
+    return df  # <--- VOCÊ PRECISA ADICIONAR ISSO NO FINAL
