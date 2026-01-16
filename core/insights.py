@@ -1,27 +1,21 @@
-def gerar_kpis(df, numericas):
+import pandas as pd  # <--- Certifique-se de importar o pandas no topo
+
+def gerar_kpis(df, colunas_numericas):
     kpis = {}
-
-    for col in numericas:
-        kpis[col] = {
-            "media": df[col].mean(),
-            "min": df[col].min(),
-            "max": df[col].max(),
-            "soma": df[col].sum()
-        }
-
+    
+    for col in colunas_numericas:
+        if col in df.columns:
+            # --- CORREÇÃO AQUI ---
+            # Tenta converter para número. Se der erro (texto), vira NaN (vazio)
+            # Isso resolve problemas de números vindo como texto
+            serie_numerica = pd.to_numeric(df[col], errors='coerce')
+            
+            kpis[col] = {
+                "soma": serie_numerica.sum(),
+                "media": serie_numerica.mean(),
+                "max": serie_numerica.max(),
+                "min": serie_numerica.min()
+            }
+            # ---------------------
+            
     return kpis
-
-
-def gerar_insights(df, datas, numericas, categoricas):
-    insights = []
-
-    if numericas:
-        insights.append("Os dados numéricos apresentam variação significativa e permitem análises detalhadas.")
-
-    if datas:
-        insights.append("A distribuição temporal permite identificar tendências e padrões ao longo do tempo.")
-
-    if categoricas:
-        insights.append("As categorias ajudam a segmentar e compreender melhor os dados.")
-
-    return insights
