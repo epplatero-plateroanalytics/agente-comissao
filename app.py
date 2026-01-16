@@ -4,7 +4,7 @@ import pandas as pd
 from cleaner import limpar_planilha
 from utils import detectar_tipos
 from layout import render_layout
-from pdf_engine_old import gerar_pdf
+from pdf_engine_cloud import gerar_pdf   # <<< PDF ENGINE CORRETO PARA O CLOUD
 
 
 # ---------------------------
@@ -78,23 +78,27 @@ df_filtrado = render_layout(df, datas, numericas, categoricas, lang="pt")
 if st.session_state.get("pdf_ready"):
     figs = st.session_state.get("figs_pdf", [])
 
-    pdf_bytes = gerar_pdf(
-        df=df,
-        df_filtrado=df_filtrado,
-        datas=datas,
-        numericas=numericas,
-        categoricas=categoricas,
-        figs=figs,
-        lang="pt"
-    )
+    try:
+        pdf_bytes = gerar_pdf(
+            df=df,
+            df_filtrado=df_filtrado,
+            datas=datas,
+            numericas=numericas,
+            categoricas=categoricas,
+            figs=figs,
+            lang="pt"
+        )
 
-    st.success("PDF gerado com sucesso!")
+        st.success("PDF gerado com sucesso!")
 
-    st.download_button(
-        "Baixar PDF",
-        data=pdf_bytes,
-        file_name="relatorio_profissional.pdf",
-        mime="application/pdf"
-    )
+        st.download_button(
+            "Baixar PDF",
+            data=pdf_bytes,
+            file_name="relatorio_profissional.pdf",
+            mime="application/pdf"
+        )
+
+    except Exception as e:
+        st.error(f"Erro ao gerar PDF: {e}")
 
     st.session_state["pdf_ready"] = False
