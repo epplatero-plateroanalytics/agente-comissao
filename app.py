@@ -4,24 +4,18 @@ import pandas as pd
 from cleaner import limpar_planilha
 from utils import detectar_tipos
 from layout import render_layout
-from pdf_engine_cloud import gerar_pdf   # <<< PDF ENGINE CORRETO PARA O CLOUD
+from pdf_engine_cloud import gerar_pdf
 
 
-# ---------------------------
-# CONFIGURAÇÃO DO APP
-# ---------------------------
 st.set_page_config(
-    page_title="Agente Universal PRO — Platero Analytics",
+    page_title="Relatório Premium — Platero Analytics",
     layout="wide"
 )
 
 st.title("Agente Universal PRO — Platero Analytics")
-st.write("Envie uma planilha para análise avançada, gráficos, insights e PDF profissional.")
+st.write("Envie uma planilha para gerar um Relatório Premium completo.")
 
 
-# ---------------------------
-# UPLOAD DO ARQUIVO
-# ---------------------------
 arquivo = st.file_uploader("Selecione um arquivo", type=["xlsx", "csv"])
 
 if not arquivo:
@@ -30,9 +24,6 @@ if not arquivo:
 
 nome = arquivo.name.lower()
 
-# ---------------------------
-# LEITURA DO ARQUIVO
-# ---------------------------
 try:
     if nome.endswith(".xlsx"):
         df = pd.read_excel(arquivo)
@@ -50,9 +41,6 @@ if df.empty:
     st.stop()
 
 
-# ---------------------------
-# LIMPEZA AUTOMÁTICA
-# ---------------------------
 df = limpar_planilha(df)
 
 if df.empty:
@@ -60,21 +48,11 @@ if df.empty:
     st.stop()
 
 
-# ---------------------------
-# DETECTAR TIPOS
-# ---------------------------
 datas, numericas, categoricas = detectar_tipos(df)
 
-
-# ---------------------------
-# RENDERIZAR LAYOUT (ABAS)
-# ---------------------------
 df_filtrado = render_layout(df, datas, numericas, categoricas, lang="pt")
 
 
-# ---------------------------
-# GERAR PDF
-# ---------------------------
 if st.session_state.get("pdf_ready"):
     figs = st.session_state.get("figs_pdf", [])
 
@@ -89,12 +67,12 @@ if st.session_state.get("pdf_ready"):
             lang="pt"
         )
 
-        st.success("PDF gerado com sucesso!")
+        st.success("PDF Premium gerado com sucesso!")
 
         st.download_button(
-            "Baixar PDF",
+            "Baixar Relatório Premium",
             data=pdf_bytes,
-            file_name="relatorio_profissional.pdf",
+            file_name="relatorio_premium.pdf",
             mime="application/pdf"
         )
 
