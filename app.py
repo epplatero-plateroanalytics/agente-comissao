@@ -1,116 +1,134 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-from jinja2 import Environment, FileSystemLoader
-import pdfkit
-import tempfile
-from io import BytesIO
 
-st.set_page_config(page_title="Agente de Comissões", layout="wide")
+st.set_page_config(page_title="Agente Universal de Planilhas", layout="wide")
 
-st.title("Agente de Comissões – Dashboard e Relatório PDF")
+st.title("Agente Universal de Planilhas – Exploração e Análise Automática")
 
-st.write("Envie uma ou mais planilhas de comissão (XLSX ou CSV).")
+st.write("Envie uma planilha em XLSX ou CSV e eu te ajudo a explorar os dados.")
 
-arquivos = st.file_uploader(
-    "Selecione os arquivos",
+arquivo = st.file_uploader(
+    "Selecione um arquivo",
     type=["xlsx", "csv"],
-    accept_multiple_files=True
+    accept_multiple_files=False
 )
 
-def limpar_df(df):
-    df = df.rename(columns={
-        "DATA": "DATA",
-        "CLIENTE": "CLIENTE",
-        "VALOR DO PEDIDO": "VALOR_DO_PEDIDO"
-    })
-    df = df[df["CLIENTE"].notna()]
-    df["DATA"] = pd.to_datetime(df["DATA"], errors="coerce")
-    df = df[df["DATA"].notna()]
-    df["ANO"] = df["DATA"].dt.year
-    df["MES"] = df["DATA"].dt.month
-    return df
+if not arquivo:
+    st.info("Envie uma planilha para começar.")
+    st.stop()
 
-df_total = None
-
-if arquivos:
-    dfs = []
-    for arq in arquivos:
-        if arq.name.endswith(".xlsx"):
-            df = pd.read_excel(arq)
-        else:
-            df = pd.read_csv(arq, sep=";")
-        dfs.append(df)
-
-    df_total = pd.concat(dfs, ignore_index=True)
-    df_total = limpar_df(df_total)
-
-    st.subheader("Prévia dos dados combinados")
-    st.dataframe(df_total.head())
-
-    total_vendas = df_total["VALOR_DO_PEDIDO"].sum()
-    ticket_medio = df_total["VALOR_DO_PEDIDO"].mean()
-    total_pedidos = len(df_total)
-
-    col1, col2, col3 = st.columns(3)
-    col1.metric("Total de Vendas", f"R$ {total_vendas:,.2f}")
-    col2.metric("Ticket Médio", f"R$ {ticket_medio:,.2f}")
-    col3.metric("Total de Pedidos", total_pedidos)
-
-    ranking = (
-        df_total.groupby("CLIENTE")["VALOR_DO_PEDIDO"]
-        .sum()
-        .sort_values(ascending=False)
-        .head(10)
-    )
-
-    st.subheader("Top 10 Clientes por Valor de Vendas")
-    st.dataframe(ranking.reset_index().rename(columns={"VALOR_DO_PEDIDO": "TOTAL_VENDAS"}))
-
-    df_mensal = (
-        df_total
-        .groupby(["ANO", "MES"])["VALOR_DO_PEDIDO"]
-        .sum()
-        .reset_index()
-    )
-    df_mensal["PERIODO"] = df_mensal["ANO"].astype(str) + "-" + df_mensal["MES"].astype(str).str.zfill(2)
-
-    fig = px.line(
-        df_mensal,
-        x="PERIODO",
-        y="VALOR_DO_PEDIDO",
-        title="Evolução Mensal de Vendas"
-    )
-    st.subheader("Evolução Mensal de Vendas")
-    st.plotly_chart(fig, use_container_width=True)
-
-    st.subheader("Relatório em PDF")
-
-    if st.button("Gerar relatório em PDF"):
-        env = Environment(loader=FileSystemLoader("templates"))
-        template = env.get_template("relatorio.html")
-
-        ranking_html = ranking.reset_index().rename(
-            columns={"VALOR_DO_PEDIDO": "TOTAL_VENDAS"}
-        ).to_html(index=False)
-
-        html = template.render(
-            total_vendas=f"{total_vendas:,.2f}",
-            ticket_medio=f"{ticket_medio:,.2f}",
-            total_pedidos=total_pedidos,
-            ranking_html=ranking_html
-        )
-
-        with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp_pdf:
-            pdfkit.from_string(html, tmp_pdf.name)
-            tmp_pdf.seek(0)
-            pdf_bytes = tmp_pdf.read()
-
-        st.download_button(
-            "Baixar relatório em PDF",
-            data=pdf_bytes,
-            file_name="relatorio_comissoes.pdf",
-            mime="application/pdf",
-        )
+# 1. Leitura genérica da planilha
+nome = arquivo.name.lower()
+if nome.endswith(".xlsx"):
+    df = pd.read_excel(arquivo)
 else:
-    st.info("Envie pelo menos uma planilha para começar.")
+    # tenta ; depois ,
+    try:
+        df = pd.read_csv(arquivo, sep=";")
+    except Exception:
+        df = pd.read_csv(arquivo)
+
+st.subheader("Prévia dos dados")
+st.dataframe(df.head())
+
+st.markdown(f"**Linhas:** {df.shape[0]} &nbsp;&nbsp; **Colunas:** {df.shape[1]}")
+
+# 2. Identificação de tipos de colunas
+numericas = df.select_dtypes(include=["int64", "float64"]).columns.tolist()
+datas = df.select_dtypes(include=["datetime64[ns]"]).columns.tolist()
+
+# tenta converter colunas que parecem datas
+for col in df.columns:
+    if col not in datas:
+        try:
+            convertido = pd.to_datetime(df[col], errors="raise", dayfirst=True)
+            df[col] = convertido
+            datas.append(col)
+        except Exception:
+            pass
+
+categoricas = df.select_dtypes(include=["object", "category"]).columns.tolist()
+
+st.subheader("Tipos de colunas detectados")
+col1, col2, col3 = st.columns(3)
+col1.write("**Numéricas:**")
+col1.write(numericas if numericas else "-")
+col2.write("**Datas:**")
+col2.write(datas if datas else "-")
+col3.write("**Categóricas/Textos:**")
+col3.write(categoricas if categoricas else "-")
+
+# 3. Resumo estatístico
+st.subheader("Resumo estatístico das colunas numéricas")
+if numericas:
+    st.dataframe(df[numericas].describe().T)
+else:
+    st.info("Nenhuma coluna numérica encontrada para resumo estatístico.")
+
+# 4. Exploração guiada
+
+st.header("Exploração visual")
+
+aba1, aba2, aba3 = st.tabs(["Séries temporais", "Comparações por categoria", "Distribuições"])
+
+# 4.1 Séries temporais
+with aba1:
+    if datas and numericas:
+        col_data = st.selectbox("Escolha a coluna de data", datas)
+        col_valor = st.selectbox("Escolha a coluna numérica para analisar ao longo do tempo", numericas)
+        freq = st.selectbox("Agregação", ["Diário", "Mensal", "Anual"])
+
+        df_temp = df[[col_data, col_valor]].dropna()
+        df_temp = df_temp.sort_values(col_data)
+
+        if freq == "Mensal":
+            df_temp["__PERIODO__"] = df_temp[col_data].dt.to_period("M").dt.to_timestamp()
+        elif freq == "Anual":
+            df_temp["__PERIODO__"] = df_temp[col_data].dt.to_period("Y").dt.to_timestamp()
+        else:
+            df_temp["__PERIODO__"] = df_temp[col_data]
+
+        df_group = df_temp.groupby("__PERIODO__")[col_valor].sum().reset_index()
+
+        fig = px.line(df_group, x="__PERIODO__", y=col_valor,
+                      title=f"Evolução de {col_valor} ao longo do tempo")
+        st.plotly_chart(fig, use_container_width=True)
+    else:
+        st.info("É preciso ter pelo menos uma coluna de data e uma numérica para séries temporais.")
+
+# 4.2 Comparações por categoria
+with aba2:
+    if categoricas and numericas:
+        col_cat = st.selectbox("Escolha a coluna categórica", categoricas)
+        col_valor = st.selectbox("Escolha a coluna numérica para agregar", numericas, key="cat_num")
+        tipo_agreg = st.selectbox("Tipo de agregação", ["Soma", "Média", "Contagem"])
+
+        df_cat = df[[col_cat, col_valor]].dropna()
+
+        if tipo_agreg == "Soma":
+            df_group = df_cat.groupby(col_cat)[col_valor].sum().reset_index()
+        elif tipo_agreg == "Média":
+            df_group = df_cat.groupby(col_cat)[col_valor].mean().reset_index()
+        else:
+            df_group = df_cat.groupby(col_cat)[col_valor].count().reset_index()
+            col_valor = "Contagem"
+            df_group = df_group.rename(columns={df_group.columns[1]: col_valor})
+
+        df_group = df_group.sort_values(df_group.columns[1], ascending=False).head(30)
+
+        fig = px.bar(df_group, x=col_cat, y=df_group.columns[1],
+                     title=f"{tipo_agreg} de {col_valor} por {col_cat}")
+        st.plotly_chart(fig, use_container_width=True)
+        st.dataframe(df_group)
+    else:
+        st.info("É preciso ter pelo menos uma coluna categórica e uma numérica para comparações.")
+
+# 4.3 Distribuições
+with aba3:
+    if numericas:
+        col_num = st.selectbox("Escolha a coluna numérica para ver a distribuição", numericas, key="dist_num")
+        fig = px.histogram(df, x=col_num, nbins=30, title=f"Distribuição de {col_num}")
+        st.plotly_chart(fig, use_container_width=True)
+    else:
+        st.info("Nenhuma coluna numérica encontrada para distribuição.")
