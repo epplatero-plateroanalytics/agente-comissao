@@ -4,7 +4,7 @@ import pandas as pd
 from cleaner import limpar_planilha
 from utils import detectar_tipos
 from layout import render_layout
-from pdf_engine import gerar_pdf
+from pdf_engine_old import gerar_pdf
 
 
 # ---------------------------
