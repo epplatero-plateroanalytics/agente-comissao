@@ -1,26 +1,19 @@
-<!DOCTYPE html>
+html = f"""
 <html>
 <head>
-  <meta charset="utf-8">
-  <title>Relatório de Comissões</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    h1, h2 { color: #333; }
-    table { border-collapse: collapse; width: 100%; margin-top: 10px; }
-    th, td { border: 1px solid #ccc; padding: 6px 8px; font-size: 12px; }
-    th { background-color: #f2f2f2; }
-  </style>
+    <meta charset="UTF-8">
+    <style>
+        body {{ font-family: Arial, sans-serif; margin: 40px; }}
+        h1 {{ text-align: center; color: #003366; }}
+        h2 {{ color: #003366; border-bottom: 2px solid #003366; padding-bottom: 5px; }}
+        .insight {{ margin: 10px 0; font-size: 14px; }}
+        .section {{ margin-top: 40px; }}
+        .capa {{
+            text-align: center;
+            margin-top: 150px;
+        }}
+        .capa h1 {{ font-size: 40px; }}
+        .capa h3 {{ color: #555; }}
+    </style>
 </head>
 <body>
-  <h1>Relatório de Comissões</h1>
-
-  <h2>Resumo Geral</h2>
-  <p><strong>Total de vendas:</strong> R$ {{ total_vendas }}</p>
-  <p><strong>Ticket médio:</strong> R$ {{ ticket_medio }}</p>
-  <p><strong>Total de pedidos:</strong> {{ total_pedidos }}</p>
-
-  <h2>Top 10 Clientes</h2>
-  {{ ranking_html | safe }}
-
-</body>
-</html>
