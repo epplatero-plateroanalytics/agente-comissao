@@ -191,4 +191,168 @@ with aba3:
         fig = px.histogram(df, x=col_num, nbins=30, title=f"Distribuição de {col_num}")
         st.plotly_chart(fig, use_container_width=True)
     else:
-        st.info("Nenhuma coluna numérica encontrada.")
+        st.info("Nenhuma coluna numérica encontrada.")import streamlit as st
+import pandas as pd
+import plotly.express as px
+import pdfkit
+import base64
+import tempfile
+
+st.set_page_config(page_title="Agente Universal – PDF + Insights", layout="wide")
+
+st.title("Agente Universal de Planilhas – PDF + Insights Automáticos")
+st.write("Envie uma planilha e receba análises, gráficos, insights e um relatório em PDF.")
+
+# ---------------------------
+# 1. Upload
+# ---------------------------
+arquivo = st.file_uploader("Selecione um arquivo", type=["xlsx", "csv"])
+
+if not arquivo:
+    st.info("Envie uma planilha para começar.")
+    st.stop()
+
+# ---------------------------
+# 2. Leitura segura
+# ---------------------------
+nome = arquivo.name.lower()
+
+try:
+    if nome.endswith(".xlsx"):
+        df = pd.read_excel(arquivo)
+    else:
+        try:
+            df = pd.read_csv(arquivo, sep=";")
+        except:
+            df = pd.read_csv(arquivo)
+except:
+    st.error("Erro ao ler o arquivo.")
+    st.stop()
+
+# ---------------------------
+# 3. Validações
+# ---------------------------
+if df.empty:
+    st.error("A planilha está vazia.")
+    st.stop()
+
+if df.columns.duplicated().any():
+    st.warning("Colunas duplicadas detectadas. Renomeando automaticamente.")
+    df.columns = [f"{col}_{i}" if df.columns.tolist().count(col) > 1 else col
+                  for i, col in enumerate(df.columns)]
+
+# ---------------------------
+# 4. Conversão automática
+# ---------------------------
+datas = []
+for col in df.columns:
+    try:
+        convertido = pd.to_datetime(df[col], errors="raise", dayfirst=True)
+        df[col] = convertido
+        datas.append(col)
+    except:
+        pass
+
+for col in df.columns:
+    if df[col].dtype == object:
+        try:
+            df[col] = df[col].str.replace(".", "").str.replace(",", ".").astype(float)
+        except:
+            pass
+
+numericas = df.select_dtypes(include=["int64", "float64"]).columns.tolist()
+categoricas = df.select_dtypes(include=["object", "category"]).columns.tolist()
+
+# ---------------------------
+# 5. Exibição inicial
+# ---------------------------
+st.subheader("Prévia dos dados")
+st.dataframe(df.head())
+
+# ---------------------------
+# 6. Insights automáticos
+# ---------------------------
+st.header("🧠 Insights automáticos")
+
+insights = []
+
+if numericas:
+    for col in numericas:
+        media = df[col].mean()
+        maximo = df[col].max()
+        minimo = df[col].min()
+        insights.append(f"- A média de **{col}** é {media:,.2f}.")
+        insights.append(f"- O maior valor registrado em **{col}** é {maximo:,.2f}.")
+        insights.append(f"- O menor valor registrado em **{col}** é {minimo:,.2f}.")
+
+if datas:
+    col_data = datas[0]
+    inicio = df[col_data].min()
+    fim = df[col_data].max()
+    insights.append(f"- O período analisado vai de **{inicio.date()}** até **{fim.date()}**.")
+
+if categoricas:
+    col_cat = categoricas[0]
+    top_cat = df[col_cat].value_counts().idxmax()
+    insights.append(f"- A categoria mais frequente em **{col_cat}** é **{top_cat}**.")
+
+if not insights:
+    insights.append("Nenhum insight automático pôde ser gerado.")
+
+for item in insights:
+    st.write(item)
+
+# ---------------------------
+# 7. Gráficos
+# ---------------------------
+st.header("📊 Gráficos automáticos")
+
+graficos_html = ""
+
+if numericas:
+    col_num = st.selectbox("Escolha uma coluna numérica", numericas)
+    fig = px.histogram(df, x=col_num, nbins=30, title=f"Distribuição de {col_num}")
+    st.plotly_chart(fig, use_container_width=True)
+    graficos_html += fig.to_html(full_html=False)
+
+if datas and numericas:
+    col_data = datas[0]
+    col_valor = numericas[0]
+    df_temp = df[[col_data, col_valor]].dropna()
+    df_temp = df_temp.sort_values(by=col_data)
+
+    fig2 = px.line(df_temp, x=col_data, y=col_valor, title=f"Evolução de {col_valor} ao longo do tempo")
+    st.plotly_chart(fig2, use_container_width=True)
+    graficos_html += fig2.to_html(full_html=False)
+
+# ---------------------------
+# 8. Gerar PDF
+# ---------------------------
+st.header("📄 Gerar relatório em PDF")
+
+html = f"""
+<h1>Relatório Automático</h1>
+<h2>Insights</h2>
+{''.join(f'<p>{i}</p>' for i in insights)}
+
+<h2>Gráficos</h2>
+{graficos_html}
+
+<h2>Primeiras linhas da planilha</h2>
+{df.head().to_html()}
+"""
+
+if st.button("Gerar PDF"):
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".html") as tmp_html:
+        tmp_html.write(html.encode("utf-8"))
+        tmp_html_path = tmp_html.name
+
+    pdf_path = tmp_html_path.replace(".html", ".pdf")
+    pdfkit.from_file(tmp_html_path, pdf_path)
+
+    with open(pdf_path, "rb") as f:
+        pdf_bytes = f.read()
+        b64 = base64.b64encode(pdf_bytes).decode()
+
+    st.success("PDF gerado com sucesso!")
+    st.download_button("Baixar PDF", data=pdf_bytes, file_name="relatorio.pdf")
