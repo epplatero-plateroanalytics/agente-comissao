@@ -15,7 +15,8 @@ st.write("Envie uma planilha e gere análises avançadas, insights e relatório 
 # ---------------------------
 # 1. Upload
 # ---------------------------
-arquivo = st.file_uploader("Selecione um arquivo", type=["xlsx", "csv"], key="upload_unico")
+arquivo = st.file_uploader("Selecione um arquivo", type=["xlsx", "csv"])
+
 if not arquivo:
     st.info("Envie uma planilha para começar.")
     st.stop()
