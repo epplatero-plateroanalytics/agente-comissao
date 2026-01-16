@@ -1,214 +1,21 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-
-st.set_page_config(page_title="Agente Universal de Planilhas", layout="wide")
-
-st.title("Agente Universal de Planilhas – Exploração e Análise Automática")
-st.write("Envie uma planilha em XLSX ou CSV e o agente fará a análise automaticamente.")
-
-# ---------------------------
-# 1. Upload do arquivo
-# ---------------------------
-arquivo = st.file_uploader(
-    "Selecione um arquivo",
-    type=["xlsx", "csv"],
-    accept_multiple_files=False
-)
-
-if not arquivo:
-    st.info("Envie uma planilha para começar.")
-    st.stop()
-
-# ---------------------------
-# 2. Leitura segura da planilha
-# ---------------------------
-nome = arquivo.name.lower()
-
-try:
-    if nome.endswith(".xlsx"):
-        df = pd.read_excel(arquivo)
-    else:
-        try:
-            df = pd.read_csv(arquivo, sep=";")
-        except Exception:
-            df = pd.read_csv(arquivo)
-except Exception:
-    st.error("Não foi possível ler o arquivo. Verifique se ele está corrompido ou protegido.")
-    st.stop()
-
-# ---------------------------
-# 3. Validações automáticas
-# ---------------------------
-
-# Planilha vazia
-if df.empty:
-    st.error("A planilha enviada está vazia.")
-    st.stop()
-
-# Sem colunas
-if len(df.columns) == 0:
-    st.error("A planilha não possui colunas.")
-    st.stop()
-
-# Colunas duplicadas
-if df.columns.duplicated().any():
-    st.warning("Foram encontradas colunas duplicadas. Elas foram renomeadas automaticamente.")
-    df.columns = [f"{col}_{i}" if df.columns.tolist().count(col) > 1 else col
-                  for i, col in enumerate(df.columns)]
-
-# ---------------------------
-# 4. Conversão automática de tipos
-# ---------------------------
-
-# Detectar datas
-datas = []
-for col in df.columns:
-    try:
-        convertido = pd.to_datetime(df[col], errors="raise", dayfirst=True)
-        df[col] = convertido
-        datas.append(col)
-    except Exception:
-        pass
-
-# Detectar numéricas (incluindo números como texto)
-for col in df.columns:
-    if df[col].dtype == object:
-        try:
-            df[col] = df[col].str.replace(".", "").str.replace(",", ".").astype(float)
-        except Exception:
-            pass
-
-numericas = df.select_dtypes(include=["int64", "float64"]).columns.tolist()
-categoricas = df.select_dtypes(include=["object", "category"]).columns.tolist()
-
-# ---------------------------
-# 5. Exibição inicial
-# ---------------------------
-st.subheader("Prévia dos dados")
-st.dataframe(df.head())
-
-st.markdown(f"**Linhas:** {df.shape[0]} &nbsp;&nbsp; **Colunas:** {df.shape[1]}")
-
-st.subheader("Tipos de colunas detectados")
-col1, col2, col3 = st.columns(3)
-col1.write("**Numéricas:**")
-col1.write(numericas if numericas else "-")
-col2.write("**Datas:**")
-col2.write(datas if datas else "-")
-col3.write("**Categóricas/Textos:**")
-col3.write(categoricas if categoricas else "-")
-
-# ---------------------------
-# 6. Resumo estatístico
-# ---------------------------
-st.subheader("Resumo estatístico das colunas numéricas")
-if numericas:
-    st.dataframe(df[numericas].describe().T)
-else:
-    st.info("Nenhuma coluna numérica encontrada.")
-
-# ---------------------------
-# 7. Exploração visual
-# ---------------------------
-st.header("Exploração visual")
-aba1, aba2, aba3 = st.tabs(["Séries temporais", "Comparações por categoria", "Distribuições"])
-
-# ---------------------------
-# 7.1 Séries temporais
-# ---------------------------
-with aba1:
-    if datas and numericas:
-        col_data = st.selectbox("Escolha a coluna de data", datas)
-        col_valor = st.selectbox("Escolha a coluna numérica", numericas)
-        freq = st.selectbox("Agregação", ["Diário", "Mensal", "Anual"])
-
-        df_temp = df[[col_data, col_valor]].dropna()
-
-        # Se houver datas duplicadas, agregamos automaticamente
-        if df_temp[col_data].duplicated().any():
-            st.warning("Datas duplicadas detectadas. Valores agregados automaticamente.")
-            df_temp = df_temp.groupby(col_data)[col_valor].sum().reset_index()
-
-        df_temp = df_temp.sort_values(by=col_data, ignore_index=True)
-
-        if freq == "Mensal":
-            df_temp["__PERIODO__"] = df_temp[col_data].dt.to_period("M").dt.to_timestamp()
-        elif freq == "Anual":
-            df_temp["__PERIODO__"] = df_temp[col_data].dt.to_period("Y").dt.to_timestamp()
-        else:
-            df_temp["__PERIODO__"] = df_temp[col_data]
-
-        df_group = df_temp.groupby("__PERIODO__")[col_valor].sum().reset_index()
-
-        fig = px.line(df_group, x="__PERIODO__", y=col_valor,
-                      title=f"Evolução de {col_valor} ao longo do tempo")
-        st.plotly_chart(fig, use_container_width=True)
-    else:
-        st.info("É preciso ter pelo menos uma coluna de data e uma numérica.")
-
-# ---------------------------
-# 7.2 Comparações por categoria
-# ---------------------------
-with aba2:
-    if categoricas and numericas:
-        col_cat = st.selectbox("Escolha a coluna categórica", categoricas)
-        col_valor = st.selectbox("Escolha a coluna numérica", numericas, key="cat_num")
-        tipo_agreg = st.selectbox("Tipo de agregação", ["Soma", "Média", "Contagem"])
-
-        df_cat = df[[col_cat, col_valor]].dropna()
-
-        # Limitar categorias muito numerosas
-        if df_cat[col_cat].nunique() > 200:
-            st.warning("Muitas categorias detectadas. Exibindo apenas as 200 mais frequentes.")
-            top = df_cat[col_cat].value_counts().head(200).index
-            df_cat = df_cat[df_cat[col_cat].isin(top)]
-
-        if tipo_agreg == "Soma":
-            df_group = df_cat.groupby(col_cat)[col_valor].sum().reset_index()
-        elif tipo_agreg == "Média":
-            df_group = df_cat.groupby(col_cat)[col_valor].mean().reset_index()
-        else:
-            df_group = df_cat.groupby(col_cat)[col_valor].count().reset_index()
-            df_group = df_group.rename(columns={col_valor: "Contagem"})
-            col_valor = "Contagem"
-
-        df_group = df_group.sort_values(df_group.columns[1], ascending=False)
-
-        fig = px.bar(df_group, x=col_cat, y=df_group.columns[1],
-                     title=f"{tipo_agreg} de {col_valor} por {col_cat}")
-        st.plotly_chart(fig, use_container_width=True)
-        st.dataframe(df_group)
-    else:
-        st.info("É preciso ter pelo menos uma coluna categórica e uma numérica.")
-
-# ---------------------------
-# 7.3 Distribuições numéricas
-# ---------------------------
-with aba3:
-    if numericas:
-        col_num = st.selectbox("Escolha a coluna numérica", numericas, key="dist_num")
-        fig = px.histogram(df, x=col_num, nbins=30, title=f"Distribuição de {col_num}")
-        st.plotly_chart(fig, use_container_width=True)
-    else:
-        st.info("Nenhuma coluna numérica encontrada.")
-        import streamlit as st
-import pandas as pd
-import plotly.express as px
+import numpy as np
 import pdfkit
 import base64
 import tempfile
+from datetime import datetime
 
-st.set_page_config(page_title="Agente Universal – PDF + Insights", layout="wide")
+st.set_page_config(page_title="Agente Universal Premium", layout="wide")
 
-st.title("Agente Universal de Planilhas – PDF + Insights Automáticos")
-st.write("Envie uma planilha e receba análises, gráficos, insights e um relatório em PDF.")
+st.title("Agente Universal de Planilhas – Versão Premium + PDF Profissional")
+st.write("Envie uma planilha e gere análises avançadas, insights e relatório em PDF.")
 
 # ---------------------------
 # 1. Upload
 # ---------------------------
-arquivo = st.file_uploader("Selecione um arquivo", type=["xlsx", "csv"])
-
+arquivo = st.file_uploader("Selecione um arquivo", type=["xlsx", "csv"], key="upload_unico")
 if not arquivo:
     st.info("Envie uma planilha para começar.")
     st.stop()
@@ -265,10 +72,16 @@ numericas = df.select_dtypes(include=["int64", "float64"]).columns.tolist()
 categoricas = df.select_dtypes(include=["object", "category"]).columns.tolist()
 
 # ---------------------------
-# 5. Exibição inicial
+# 5. Dashboard Premium
 # ---------------------------
 st.subheader("Prévia dos dados")
 st.dataframe(df.head())
+
+st.subheader("Tipos de colunas detectados")
+c1, c2, c3 = st.columns(3)
+c1.write(numericas if numericas else "-")
+c2.write(datas if datas else "-")
+c3.write(categoricas if categoricas else "-")
 
 # ---------------------------
 # 6. Insights automáticos
@@ -280,38 +93,34 @@ insights = []
 if numericas:
     for col in numericas:
         media = df[col].mean()
+        mediana = df[col].median()
         maximo = df[col].max()
         minimo = df[col].min()
-        insights.append(f"- A média de **{col}** é {media:,.2f}.")
-        insights.append(f"- O maior valor registrado em **{col}** é {maximo:,.2f}.")
-        insights.append(f"- O menor valor registrado em **{col}** é {minimo:,.2f}.")
+        insights.append(f"A média de {col} é {media:,.2f} e a mediana é {mediana:,.2f}.")
+        insights.append(f"O maior valor em {col} é {maximo:,.2f} e o menor é {minimo:,.2f}.")
 
 if datas:
     col_data = datas[0]
     inicio = df[col_data].min()
     fim = df[col_data].max()
-    insights.append(f"- O período analisado vai de **{inicio.date()}** até **{fim.date()}**.")
+    insights.append(f"O período analisado vai de {inicio.date()} até {fim.date()}.")
 
 if categoricas:
     col_cat = categoricas[0]
     top_cat = df[col_cat].value_counts().idxmax()
-    insights.append(f"- A categoria mais frequente em **{col_cat}** é **{top_cat}**.")
-
-if not insights:
-    insights.append("Nenhum insight automático pôde ser gerado.")
+    freq = df[col_cat].value_counts().max()
+    insights.append(f"A categoria mais frequente em {col_cat} é {top_cat} ({freq} ocorrências).")
 
 for item in insights:
-    st.write(item)
+    st.write("- " + item)
 
 # ---------------------------
-# 7. Gráficos
+# 7. Gráficos (para PDF)
 # ---------------------------
-st.header("📊 Gráficos automáticos")
-
 graficos_html = ""
 
 if numericas:
-    col_num = st.selectbox("Escolha uma coluna numérica", numericas)
+    col_num = numericas[0]
     fig = px.histogram(df, x=col_num, nbins=30, title=f"Distribuição de {col_num}")
     st.plotly_chart(fig, use_container_width=True)
     graficos_html += fig.to_html(full_html=False)
@@ -322,28 +131,69 @@ if datas and numericas:
     df_temp = df[[col_data, col_valor]].dropna()
     df_temp = df_temp.sort_values(by=col_data)
 
-    fig2 = px.line(df_temp, x=col_data, y=col_valor, title=f"Evolução de {col_valor} ao longo do tempo")
+    fig2 = px.line(df_temp, x=col_data, y=col_valor, title=f"Evolução de {col_valor}")
     st.plotly_chart(fig2, use_container_width=True)
     graficos_html += fig2.to_html(full_html=False)
 
 # ---------------------------
-# 8. Gerar PDF
+# 8. PDF Profissional
 # ---------------------------
-st.header("📄 Gerar relatório em PDF")
-
-html = f"""
-<h1>Relatório Automático</h1>
-<h2>Insights</h2>
-{''.join(f'<p>{i}</p>' for i in insights)}
-
-<h2>Gráficos</h2>
-{graficos_html}
-
-<h2>Primeiras linhas da planilha</h2>
-{df.head().to_html()}
-"""
+st.header("📄 Gerar relatório PDF (Layout Profissional)")
 
 if st.button("Gerar PDF"):
+    data_atual = datetime.now().strftime("%d/%m/%Y")
+
+    html = f"""
+    <html>
+    <head>
+        <style>
+            body {{ font-family: Arial, sans-serif; margin: 40px; }}
+            h1 {{ text-align: center; color: #003366; }}
+            h2 {{ color: #003366; border-bottom: 2px solid #003366; padding-bottom: 5px; }}
+            .insight {{ margin: 10px 0; font-size: 14px; }}
+            .section {{ margin-top: 40px; }}
+            .capa {{
+                text-align: center;
+                margin-top: 150px;
+            }}
+            .capa h1 {{ font-size: 40px; }}
+            .capa h3 {{ color: #555; }}
+        </style>
+    </head>
+    <body>
+
+    <div class="capa">
+        <h1>Relatório Analítico</h1>
+        <h3>Gerado em {data_atual}</h3>
+        <h4>Agente Universal Premium</h4>
+    </div>
+
+    <div class="section">
+        <h2>Sumário</h2>
+        <p>1. Insights automáticos</p>
+        <p>2. Gráficos</p>
+        <p>3. Primeiras linhas da planilha</p>
+    </div>
+
+    <div class="section">
+        <h2>1. Insights automáticos</h2>
+        {''.join(f'<p class="insight">• {i}</p>' for i in insights)}
+    </div>
+
+    <div class="section">
+        <h2>2. Gráficos</h2>
+        {graficos_html}
+    </div>
+
+    <div class="section">
+        <h2>3. Primeiras linhas da planilha</h2>
+        {df.head().to_html()}
+    </div>
+
+    </body>
+    </html>
+    """
+
     with tempfile.NamedTemporaryFile(delete=False, suffix=".html") as tmp_html:
         tmp_html.write(html.encode("utf-8"))
         tmp_html_path = tmp_html.name
@@ -353,7 +203,6 @@ if st.button("Gerar PDF"):
 
     with open(pdf_path, "rb") as f:
         pdf_bytes = f.read()
-        b64 = base64.b64encode(pdf_bytes).decode()
 
     st.success("PDF gerado com sucesso!")
-    st.download_button("Baixar PDF", data=pdf_bytes, file_name="relatorio.pdf")
+    st.download_button("Baixar PDF", data=pdf_bytes, file_name="relatorio_profissional.pdf")
