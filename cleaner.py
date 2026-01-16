@@ -3,12 +3,11 @@ import numpy as np
 
 def limpar_planilha(df):
     """
-    Limpeza automática universal — versão ULTRA PRO FINAL.
+    Limpeza universal — versão TITANIUM.
+    - Remove objetos e converte tudo para string antes de qualquer .str
     - Cabeçalho inteligente
     - Conversão numérica segura
     - Conversão de datas segura
-    - Proteção contra números virarem datas
-    - Nenhum uso de .str sem garantir string antes
     """
 
     # 1. Remover linhas totalmente vazias
@@ -21,13 +20,18 @@ def limpar_planilha(df):
         return df
 
     # ---------------------------------------------------------
-    # 3. Detectar automaticamente a linha do cabeçalho real
+    # 3. Converter absolutamente TUDO para string imediatamente
+    # ---------------------------------------------------------
+    df = df.astype(str)
+
+    # ---------------------------------------------------------
+    # 4. Detectar automaticamente a linha do cabeçalho real
     # ---------------------------------------------------------
     melhor_linha = 0
     melhor_score = -9999
 
     for i in range(min(20, len(df))):
-        linha = df.iloc[i].astype(str)
+        linha = df.iloc[i]
 
         textos = linha.str.contains("[A-Za-z]", regex=True).sum()
         numeros = (
@@ -44,7 +48,7 @@ def limpar_planilha(df):
             melhor_linha = i
 
     # ---------------------------------------------------------
-    # 4. Definir cabeçalho real
+    # 5. Definir cabeçalho real
     # ---------------------------------------------------------
     df.columns = (
         df.iloc[melhor_linha]
@@ -54,31 +58,30 @@ def limpar_planilha(df):
     )
     df = df.iloc[melhor_linha + 1 :]
 
-    # 5. Normalizar nomes de colunas
+    # 6. Normalizar nomes de colunas
     df.columns = [
         str(c).strip() if c not in ["", None, np.nan] else f"coluna_{i}"
         for i, c in enumerate(df.columns)
     ]
 
-    # 6. Remover "Unnamed"
+    # 7. Remover "Unnamed"
     df.columns = [
         col if not col.lower().startswith("unnamed") else f"coluna_{i}"
         for i, col in enumerate(df.columns)
     ]
 
     # ---------------------------------------------------------
-    # 7. Converter TODAS as colunas para string antes de qualquer .str
+    # 8. Converter tudo para string novamente (garantia)
     # ---------------------------------------------------------
     for col in df.columns:
         df[col] = df[col].astype(str)
 
     # ---------------------------------------------------------
-    # 8. Converter números com vírgula (somente se parecer número)
+    # 9. Converter números com vírgula (somente se parecer número)
     # ---------------------------------------------------------
     for col in df.columns:
         serie = df[col]
 
-        # Detectar se a coluna é majoritariamente numérica
         numeric_like = (
             serie.str.replace(".", "", regex=False)
                  .str.replace(",", ".", regex=False)
@@ -94,7 +97,7 @@ def limpar_planilha(df):
             df[col] = pd.to_numeric(df[col], errors="coerce")
 
     # ---------------------------------------------------------
-    # 9. Converter datas (somente se NÃO for numérica)
+    # 10. Converter datas (somente se NÃO for numérica)
     # ---------------------------------------------------------
     for col in df.columns:
         if pd.api.types.is_numeric_dtype(df[col]):
@@ -113,7 +116,7 @@ def limpar_planilha(df):
             except:
                 pass
 
-    # 10. Remover linhas vazias
+    # 11. Remover linhas vazias
     df = df.dropna(how="all").reset_index(drop=True)
 
     return df
