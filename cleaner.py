@@ -3,14 +3,14 @@ import numpy as np
 
 def limpar_planilha(df):
     """
-    Limpeza automática universal — versão PRO.
+    Limpeza automática universal — versão PRO FINAL.
     Corrige:
     - Cabeçalho na linha errada
     - Colunas Unnamed
     - Colunas vazias
     - Linhas lixo
+    - Números com vírgula (convertidos ANTES das datas)
     - Datas
-    - Números com vírgula
     - Nomes inválidos de colunas
     """
 
@@ -32,10 +32,7 @@ def limpar_planilha(df):
     for i in range(min(15, len(df))):
         linha = df.iloc[i].astype(str)
 
-        # Contar quantos valores parecem texto
         textos = linha.str.contains("[A-Za-z]", regex=True).sum()
-
-        # Contar quantos valores parecem números
         numeros = (
             linha.str.replace(",", ".", regex=False)
                  .str.replace(".", "", regex=False)
@@ -43,7 +40,6 @@ def limpar_planilha(df):
                  .sum()
         )
 
-        # Critério: cabeçalho deve ter mais textos que números
         score = textos - numeros
 
         if score > melhor_score:
@@ -84,20 +80,25 @@ def limpar_planilha(df):
     )
 
     # ---------------------------------------------------------
-    # 8. Converter números com vírgula
+    # 8. PRIMEIRO: Converter números com vírgula (ANTES das datas)
     # ---------------------------------------------------------
     for col in df.columns:
         try:
             if df[col].dtype == object:
                 s = df[col].astype(str)
+
+                # remover separador de milhar
                 s = s.str.replace(".", "", regex=False)
+
+                # trocar vírgula por ponto
                 s = s.str.replace(",", ".", regex=False)
+
                 df[col] = pd.to_numeric(s, errors="ignore")
         except:
             pass
 
     # ---------------------------------------------------------
-    # 9. Converter datas automaticamente
+    # 9. DEPOIS: Converter datas automaticamente
     # ---------------------------------------------------------
     for col in df.columns:
         try:
