@@ -23,26 +23,36 @@ def limpar_planilha(df):
     if df.empty:
         return df
 
-   # 3. Detectar automaticamente a linha do cabeçalho real (versão PRO)
-melhor_linha = 0
-melhor_score = -1
+    # ---------------------------------------------------------
+    # 3. Detectar automaticamente a linha do cabeçalho real (versão PRO)
+    # ---------------------------------------------------------
+    melhor_linha = 0
+    melhor_score = -9999
 
-for i in range(min(15, len(df))):
-    linha = df.iloc[i]
+    for i in range(min(15, len(df))):
+        linha = df.iloc[i].astype(str)
 
-    # Contar quantos valores parecem texto
-    textos = linha.astype(str).str.contains("[A-Za-z]", regex=True).sum()
+        # Contar quantos valores parecem texto
+        textos = linha.str.contains("[A-Za-z]", regex=True).sum()
 
-    # Contar quantos valores parecem números
-    numeros = linha.astype(str).str.replace(",", ".", regex=False).str.replace(".", "", regex=False).str.isnumeric().sum()
+        # Contar quantos valores parecem números
+        numeros = (
+            linha.str.replace(",", ".", regex=False)
+                 .str.replace(".", "", regex=False)
+                 .str.isnumeric()
+                 .sum()
+        )
 
-    # Critério: cabeçalho deve ter mais textos que números
-    score = textos - numeros
+        # Critério: cabeçalho deve ter mais textos que números
+        score = textos - numeros
 
-    if score > melhor_score:
-        melhor_score = score
-        melhor_linha = i
+        if score > melhor_score:
+            melhor_score = score
+            melhor_linha = i
+
+    # ---------------------------------------------------------
     # 4. Definir cabeçalho real
+    # ---------------------------------------------------------
     df.columns = (
         df.iloc[melhor_linha]
         .astype(str)
@@ -73,7 +83,9 @@ for i in range(min(15, len(df))):
         .tolist()
     )
 
+    # ---------------------------------------------------------
     # 8. Converter números com vírgula
+    # ---------------------------------------------------------
     for col in df.columns:
         try:
             if df[col].dtype == object:
@@ -84,7 +96,9 @@ for i in range(min(15, len(df))):
         except:
             pass
 
+    # ---------------------------------------------------------
     # 9. Converter datas automaticamente
+    # ---------------------------------------------------------
     for col in df.columns:
         try:
             df[col] = pd.to_datetime(df[col], dayfirst=True, errors="raise")
