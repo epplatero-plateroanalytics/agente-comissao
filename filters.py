@@ -1,129 +1,47 @@
 import streamlit as st
 import pandas as pd
-from utils import calcular_outliers
 
+def aplicar_filtros(df, datas, numericas, categoricas):
+    st.subheader("🎛️ Filtros Interativos")
 
-# ---------------------------
-# FILTRO DE DATAS
-# ---------------------------
-def filtro_datas(df, datas, lang="pt"):
-    if not datas:
-        return df
+    df_filtrado = df.copy()
 
-    col_data = datas[0]
+    with st.expander("Filtros avançados", expanded=False):
 
-    serie = df[col_data].dropna()
-    if serie.empty:
-        return df
+        # Filtros para datas
+        if datas:
+            st.markdown("### 📅 Filtros de Datas")
+            for col in datas:
+                try:
+                    min_data = df[col].min()
+                    max_data = df[col].max()
 
-    min_date = serie.min().date()
-    max_date = serie.max().date()
+                    intervalo = st.date_input(
+                        f"Intervalo para {col}",
+                        value=(min_data, max_data)
+                    )
 
-    st.sidebar.subheader("📅 Intervalo de Datas")
+                    if isinstance(intervalo, tuple) and len(intervalo) == 2:
+                        inicio, fim = intervalo
+                        df_filtrado = df_filtrado[
+                            (df_filtrado[col] >= pd.to_datetime(inicio)) &
+                            (df_filtrado[col] <= pd.to_datetime(fim))
+                        ]
+                except:
+                    pass
 
-    intervalo = st.sidebar.date_input(
-        "Selecione o intervalo",
-        value=(min_date, max_date)
-    )
+        # Filtros para numéricas
+        if numericas:
+            st.markdown("### 🔢 Filtros Numéricos")
+            for col in numericas:
+                minimo = float(df[col].min())
+                maximo = float(df[col].max())
 
-    if isinstance(intervalo, tuple) and len(intervalo) == 2:
-        inicio, fim = intervalo
-        df = df[
-            (df[col_data] >= pd.to_datetime(inicio)) &
-            (df[col_data] <= pd.to_datetime(fim))
-        ]
+                faixa = st.slider(
+                    f"Intervalo para {col}",
+                    min_value=minimo,
+                    max_value=maximo,
+                    value=(minimo, maximo)
+                )
 
-    return df
-
-
-# ---------------------------
-# FILTRO DE CATEGORIAS
-# ---------------------------
-def filtro_categorias(df, categoricas, lang="pt"):
-    if not categoricas:
-        return df
-
-    col_cat = categoricas[0]
-
-    st.sidebar.subheader("🏷️ Filtro de Categorias")
-
-    valores = sorted(df[col_cat].dropna().astype(str).unique().tolist())
-
-    selecionados = st.sidebar.multiselect(
-        f"Valores em {col_cat}",
-        options=valores,
-        default=valores
-    )
-
-    modo = st.sidebar.selectbox(
-        "Modo de filtro",
-        ["Contém", "Começa com", "Igual a"]
-    )
-
-    if selecionados:
-        mask = False
-        for v in selecionados:
-            if modo == "Contém":
-                mask = mask | df[col_cat].astype(str).str.contains(v, case=False, na=False)
-            elif modo == "Começa com":
-                mask = mask | df[col_cat].astype(str).str.startswith(v, na=False)
-            else:
-                mask = mask | (df[col_cat].astype(str) == v)
-
-        df = df[mask]
-
-    return df
-
-
-# ---------------------------
-# FILTRO NUMÉRICO
-# ---------------------------
-def filtro_numerico(df, numericas, lang="pt"):
-    if not numericas:
-        return df
-
-    col_num = numericas[0]
-
-    st.sidebar.subheader("🔢 Filtro Numérico")
-
-    serie = df[col_num].dropna()
-    if serie.empty:
-        return df
-
-    min_val = float(serie.min())
-    max_val = float(serie.max())
-
-    intervalo = st.sidebar.slider(
-        f"Intervalo de {col_num}",
-        min_value=min_val,
-        max_value=max_val,
-        value=(min_val, max_val)
-    )
-
-    df = df[(df[col_num] >= intervalo[0]) & (df[col_num] <= intervalo[1])]
-
-    # Remover outliers
-    remover = st.sidebar.checkbox("Remover outliers (IQR)")
-    if remover:
-        qtd, lim_inf, lim_sup = calcular_outliers(serie)
-        df = df[(df[col_num] >= lim_inf) & (df[col_num] <= lim_sup)]
-
-    return df
-
-
-# ---------------------------
-# APLICAÇÃO COMPLETA DOS FILTROS
-# ---------------------------
-def aplicar_filtros(df, datas, categoricas, numericas, lang="pt"):
-    st.sidebar.title("🔍 Filtros Avançados")
-
-    df_f = df.copy()
-
-    df_f = filtro_datas(df_f, datas, lang)
-    df_f = filtro_categorias(df_f, categoricas, lang)
-    df_f = filtro_numerico(df_f, numericas, lang)
-
-    st.sidebar.markdown("---")
-    st.sidebar.write(f"**Linhas após filtros:** {len(df_f)}")
-
-    return df_f
+               

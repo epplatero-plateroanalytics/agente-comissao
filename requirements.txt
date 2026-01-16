@@ -1,6 +1,7 @@
 streamlit
 pandas
 numpy
-plotly
+matplotlib
 fpdf2
-openpyxl
+xlsxwriter
+python-dateutil

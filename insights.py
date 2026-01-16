@@ -1,30 +1,27 @@
-def resumo_executivo(df, datas, numericas, categoricas, lang="pt"):
-    texto = []
+def gerar_kpis(df, numericas):
+    kpis = {}
+
+    for col in numericas:
+        kpis[col] = {
+            "media": df[col].mean(),
+            "min": df[col].min(),
+            "max": df[col].max(),
+            "soma": df[col].sum()
+        }
+
+    return kpis
+
+
+def gerar_insights(df, datas, numericas, categoricas):
+    insights = []
 
     if numericas:
-        texto.append(f"O conjunto de dados possui {len(df)} registros.")
-        texto.append(f"Foram identificadas {len(numericas)} colunas numéricas.")
-        texto.append(f"As principais métricas foram calculadas com sucesso.")
+        insights.append("Os dados numéricos apresentam variação significativa e permitem análises detalhadas.")
 
     if datas:
-        texto.append(f"As datas foram reconhecidas corretamente.")
+        insights.append("A distribuição temporal permite identificar tendências e padrões ao longo do tempo.")
 
     if categoricas:
-        texto.append(f"Foram identificadas {len(categoricas)} colunas categóricas.")
+        insights.append("As categorias ajudam a segmentar e compreender melhor os dados.")
 
-    return texto
-
-
-def narrativa_ia(df, datas, numericas, categoricas, lang="pt"):
-    texto = []
-
-    if numericas:
-        texto.append("Os valores numéricos apresentam variação significativa ao longo do período analisado.")
-
-    if datas:
-        texto.append("A distribuição temporal dos dados permite identificar padrões e tendências.")
-
-    if categoricas:
-        texto.append("As categorias presentes ajudam a segmentar e compreender melhor os dados.")
-
-    return texto
+    return insights
