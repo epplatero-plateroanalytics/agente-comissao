@@ -80,7 +80,7 @@ with aba1:
         freq = st.selectbox("Agregação", ["Diário", "Mensal", "Anual"])
 
         df_temp = df[[col_data, col_valor]].dropna()
-        df_temp = df_temp.sort_values(col_data)
+        df_temp = df_temp.reset_index(drop=True).sort_values(by=col_data)
 
         if freq == "Mensal":
             df_temp["__PERIODO__"] = df_temp[col_data].dt.to_period("M").dt.to_timestamp()
