@@ -23,17 +23,25 @@ def limpar_planilha(df):
     if df.empty:
         return df
 
-    # 3. Detectar automaticamente a linha do cabeçalho real
-    melhor_linha = 0
-    melhor_score = -1
+   # 3. Detectar automaticamente a linha do cabeçalho real (versão PRO)
+melhor_linha = 0
+melhor_score = -1
 
-    for i in range(min(10, len(df))):
-        linha = df.iloc[i]
-        score = linha.notna().sum()
-        if score > melhor_score:
-            melhor_score = score
-            melhor_linha = i
+for i in range(min(15, len(df))):
+    linha = df.iloc[i]
 
+    # Contar quantos valores parecem texto
+    textos = linha.astype(str).str.contains("[A-Za-z]", regex=True).sum()
+
+    # Contar quantos valores parecem números
+    numeros = linha.astype(str).str.replace(",", ".", regex=False).str.replace(".", "", regex=False).str.isnumeric().sum()
+
+    # Critério: cabeçalho deve ter mais textos que números
+    score = textos - numeros
+
+    if score > melhor_score:
+        melhor_score = score
+        melhor_linha = i
     # 4. Definir cabeçalho real
     df.columns = (
         df.iloc[melhor_linha]
