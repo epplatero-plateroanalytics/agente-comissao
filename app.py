@@ -191,7 +191,8 @@ with aba3:
         fig = px.histogram(df, x=col_num, nbins=30, title=f"Distribuição de {col_num}")
         st.plotly_chart(fig, use_container_width=True)
     else:
-        st.info("Nenhuma coluna numérica encontrada.")import streamlit as st
+        st.info("Nenhuma coluna numérica encontrada.")
+        import streamlit as st
 import pandas as pd
 import plotly.express as px
 import pdfkit
