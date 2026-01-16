@@ -8,70 +8,60 @@ from datetime import datetime
 
 st.set_page_config(page_title="Universal Analytics Agent", layout="wide")
 
+# ---------------------------
+# TEXTOS BILÍNGUES (INTERFACE)
+# ---------------------------
 T = {
     "pt": {
-        "app_title": "Agente Universal de Planilhas – Versao Premium",
-        "app_subtitle": "Envie uma planilha e gere analises avancadas, insights e relatorio em PDF.",
+        "app_title": "Agente Universal de Planilhas – Versão Premium",
+        "app_subtitle": "Envie uma planilha e gere análises avançadas, insights e relatório em PDF.",
         "language_label": "🌐 Idioma",
-        "lang_pt": "Portugues",
-        "lang_en": "Ingles",
+        "lang_pt": "Português",
+        "lang_en": "Inglês",
         "upload_label": "Selecione um arquivo",
-        "upload_hint": "Envie uma planilha para comecar.",
+        "upload_hint": "Envie uma planilha para começar.",
         "error_read": "Erro ao ler o arquivo.",
-        "error_empty": "A planilha esta vazia.",
+        "error_empty": "A planilha está vazia.",
         "warn_dup_cols": "Colunas duplicadas detectadas. Renomeando automaticamente.",
-        "preview_title": "Previa dos dados",
+        "preview_title": "Prévia dos dados",
         "types_title": "Tipos de colunas detectados",
-        "num_cols": "Numericas",
+        "num_cols": "Numéricas",
         "date_cols": "Datas",
-        "cat_cols": "Categoricas",
-        "filters_title": "Filtros avancados",
+        "cat_cols": "Categóricas",
+        "filters_title": "Filtros avançados",
         "filter_date_range": "Intervalo de datas",
         "filter_category": "Categoria",
         "filter_category_mode": "Modo de filtro de texto",
-        "filter_contains": "Contem",
-        "filter_starts": "Comeca com",
+        "filter_contains": "Contém",
+        "filter_starts": "Começa com",
         "filter_equals": "Igual a",
-        "filter_numeric": "Filtro numerico",
-        "filter_numeric_col": "Coluna numerica",
+        "filter_numeric": "Filtro numérico",
+        "filter_numeric_col": "Coluna numérica",
         "filter_numeric_range": "Intervalo de valores",
         "filter_outliers": "Remover outliers (IQR)",
-        "insights_title": "🧠 Insights automaticos e estatistica descritiva",
-        "stats_title": "Estatisticas descritivas",
-        "corr_title": "Matriz de correlacao entre variaveis numericas",
+        "insights_title": "🧠 Insights automáticos e estatística descritiva",
+        "stats_title": "Estatísticas descritivas",
+        "corr_title": "Matriz de correlação entre variáveis numéricas",
         "top_cat_title": "Top 5 categorias em {cat} por soma de {val}",
         "insights_list_title": "Insights em linguagem natural",
-        "outliers_title": "Outliers (metodo IQR)",
-        "no_num_cols": "Nao ha colunas numericas suficientes para estatisticas descritivas.",
-        "no_outliers_info": "Nao foi possivel calcular outliers.",
-        "viz_title": "📊 Visualizacoes",
-        "select_num_col": "Selecione uma coluna numerica para analise detalhada",
-        "hist_title": "Distribuicao de {col}",
+        "outliers_title": "Outliers (método IQR)",
+        "no_num_cols": "Não há colunas numéricas suficientes para estatísticas descritivas.",
+        "no_outliers_info": "Não foi possível calcular outliers.",
+        "viz_title": "📊 Visualizações",
+        "select_num_col": "Selecione uma coluna numérica para análise detalhada",
+        "hist_title": "Distribuição de {col}",
         "box_title": "Boxplot de {col} por {cat}",
         "bar_title": "Soma de {col} por {cat}",
-        "line_title": "Evolucao de {col} ao longo do tempo",
-        "pdf_title_section": "📄 Gerar relatorio PDF (Layout Profissional)",
+        "line_title": "Evolução de {col} ao longo do tempo",
+        "pdf_title_section": "📄 Gerar relatório PDF (Layout Profissional)",
         "pdf_button": "Gerar PDF",
         "pdf_success": "PDF gerado com sucesso!",
         "pdf_download": "Baixar PDF",
-        "pdf_cover_title": "Relatorio Analitico",
-        "pdf_cover_sub": "Gerado em {date}",
-        "pdf_cover_brand": "Platero Analytics — Data Intelligence",
-        "pdf_summary": "Sumario",
-        "pdf_sum_1": "1. Estatisticas descritivas",
-        "pdf_sum_2": "2. Insights automaticos",
-        "pdf_sum_3": "3. Outliers",
-        "pdf_sum_4": "4. Primeiras linhas da planilha",
-        "pdf_stats_section": "1. Estatisticas descritivas",
-        "pdf_insights_section": "2. Insights automaticos",
-        "pdf_outliers_section": "3. Outliers (metodo IQR)",
-        "pdf_table_section": "4. Primeiras linhas da planilha",
-        "footer_text": "Platero Analytics — Pagina [page]",
-        "insight_num": "Em {col}, a media e {mean:,.2f}, mediana {median:,.2f}, desvio padrao {std:,.2f}, minimo {min:,.2f} e maximo {max:,.2f}.",
-        "insight_period": "O periodo analisado vai de {start} ate {end}.",
-        "insight_topcat": "As 5 principais categorias em {cat}, considerando a soma de {val}, foram calculadas para destacar concentracoes.",
-        "insight_corr": "Foi calculada a correlacao entre as variaveis numericas para identificar relacoes lineares.",
-        "insight_outliers": "Em {col}, foram detectados {qtd} possiveis outliers usando o metodo IQR."
+        "insight_num": "Em {col}, a média é {mean:,.2f}, mediana {median:,.2f}, desvio padrão {std:,.2f}, mínimo {min:,.2f} e máximo {max:,.2f}.",
+        "insight_period": "O período analisado vai de {start} até {end}.",
+        "insight_topcat": "As 5 principais categorias em {cat}, considerando a soma de {val}, foram calculadas para destacar concentrações.",
+        "insight_corr": "Foi calculada a correlação entre as variáveis numéricas para identificar relações lineares.",
+        "insight_outliers": "Em {col}, foram detectados {qtd} possíveis outliers usando o método IQR."
     },
     "en": {
         "app_title": "Universal Spreadsheet Agent – Premium Version",
@@ -118,19 +108,6 @@ T = {
         "pdf_button": "Generate PDF",
         "pdf_success": "PDF generated successfully!",
         "pdf_download": "Download PDF",
-        "pdf_cover_title": "Analytical Report",
-        "pdf_cover_sub": "Generated on {date}",
-        "pdf_cover_brand": "Platero Analytics — Data Intelligence",
-        "pdf_summary": "Summary",
-        "pdf_sum_1": "1. Descriptive statistics",
-        "pdf_sum_2": "2. Automatic insights",
-        "pdf_sum_3": "3. Outliers",
-        "pdf_sum_4": "4. First rows of the spreadsheet",
-        "pdf_stats_section": "1. Descriptive statistics",
-        "pdf_insights_section": "2. Automatic insights",
-        "pdf_outliers_section": "3. Outliers (IQR method)",
-        "pdf_table_section": "4. First rows of the spreadsheet",
-        "footer_text": "Platero Analytics — Page [page]",
         "insight_num": "For {col}, the mean is {mean:,.2f}, median {median:,.2f}, standard deviation {std:,.2f}, minimum {min:,.2f} and maximum {max:,.2f}.",
         "insight_period": "The analyzed period goes from {start} to {end}.",
         "insight_topcat": "The top 5 categories in {cat}, considering the sum of {val}, were calculated to highlight concentrations.",
@@ -139,6 +116,112 @@ T = {
     }
 }
 
+# TEXTOS ESPECÍFICOS DO PDF (SEM ACENTOS PARA EVITAR QUEBRA)
+T_PDF = {
+    "pt": {
+        "cover_title": "Relatorio Analitico",
+        "cover_brand": "Platero Analytics — Data Intelligence",
+        "summary": "Sumario",
+        "sum_1": "1. Estatisticas descritivas",
+        "sum_2": "2. Insights automaticos",
+        "sum_3": "3. Outliers",
+        "sum_4": "4. Primeiras linhas da planilha",
+        "stats_section": "1. Estatisticas descritivas",
+        "insights_section": "2. Insights automaticos",
+        "outliers_section": "3. Outliers (metodo IQR)",
+        "table_section": "4. Primeiras linhas da planilha",
+        "cover_sub": "Gerado em {date}",
+        "footer": "Platero Analytics — Pagina [page]",
+        "no_num_cols": "Nao ha colunas numericas suficientes para estatisticas descritivas.",
+        "no_outliers_info": "Nao foi possivel calcular outliers."
+    },
+    "en": {
+        "cover_title": "Analytical Report",
+        "cover_brand": "Platero Analytics — Data Intelligence",
+        "summary": "Summary",
+        "sum_1": "1. Descriptive statistics",
+        "sum_2": "2. Automatic insights",
+        "sum_3": "3. Outliers",
+        "sum_4": "4. First rows of the spreadsheet",
+        "stats_section": "1. Descriptive statistics",
+        "insights_section": "2. Automatic insights",
+        "outliers_section": "3. Outliers (IQR method)",
+        "table_section": "4. First rows of the spreadsheet",
+        "cover_sub": "Generated on {date}",
+        "footer": "Platero Analytics — Page [page]",
+        "no_num_cols": "There are not enough numeric columns for descriptive statistics.",
+        "no_outliers_info": "Outliers could not be calculated."
+    }
+}
+
+# ---------------------------
+# FUNÇÃO DE LIMPEZA UNIVERSAL
+# ---------------------------
+def limpar_planilha(df):
+    import numpy as np
+
+    # Remove linhas totalmente vazias
+    df = df.dropna(how="all")
+
+    # Remove colunas totalmente vazias
+    df = df.dropna(axis=1, how="all")
+
+    if df.empty:
+        return df
+
+    # Detecta melhor linha de cabeçalho (mais células não vazias nas primeiras 10 linhas)
+    melhor_linha = 0
+    melhor_score = -1
+    for i in range(min(10, len(df))):
+        linha = df.iloc[i]
+        score = linha.notna().sum()
+        if score > melhor_score:
+            melhor_score = score
+            melhor_linha = i
+
+    df.columns = df.iloc[melhor_linha].astype(str).str.strip()
+    df = df.iloc[melhor_linha + 1 :]
+
+    # Remove colunas Unnamed
+    df.columns = [
+        col if not str(col).lower().startswith("unnamed") else f"coluna_{i}"
+        for i, col in enumerate(df.columns)
+    ]
+
+    # Limpa nomes de colunas
+    df.columns = (
+        pd.Series(df.columns)
+        .str.replace("\n", " ", regex=False)
+        .str.replace("\r", " ", regex=False)
+        .str.replace("  ", " ", regex=False)
+        .str.strip()
+        .tolist()
+    )
+
+    # Converte números com vírgula
+    for col in df.columns:
+        if df[col].dtype == object:
+            s = df[col].astype(str)
+            s = s.str.replace(".", "", regex=False)
+            s = s.str.replace(",", ".", regex=False)
+            try:
+                df[col] = s.astype(float)
+            except:
+                pass
+
+    # Converte datas
+    for col in df.columns:
+        try:
+            df[col] = pd.to_datetime(df[col], dayfirst=True, errors="raise")
+        except:
+            pass
+
+    df = df.dropna(how="all").reset_index(drop=True)
+    return df
+
+# ---------------------------
+# FUNÇÕES AUXILIARES
+# ---------------------------
 def format_date(dt, lang):
     if pd.isna(dt):
         return ""
@@ -151,19 +234,24 @@ def apply_advanced_filters(df, datas, categoricas, numericas, lang):
     df_f = df.copy()
     st.subheader(T[lang]["filters_title"])
 
+    # Filtro de datas
     if datas:
         col_data = datas[0]
         min_date = df_f[col_data].min()
         max_date = df_f[col_data].max()
-        date_range = st.date_input(
-            T[lang]["filter_date_range"],
-            value=(min_date.date(), max_date.date())
-        )
-        if isinstance(date_range, tuple) and len(date_range) == 2:
-            start, end = date_range
-            df_f = df_f[(df_f[col_data] >= pd.to_datetime(start)) &
-                        (df_f[col_data] <= pd.to_datetime(end))]
+        if pd.notna(min_date) and pd.notna(max_date):
+            date_range = st.date_input(
+                T[lang]["filter_date_range"],
+                value=(min_date.date(), max_date.date())
+            )
+            if isinstance(date_range, tuple) and len(date_range) == 2:
+                start, end = date_range
+                df_f = df_f[
+                    (df_f[col_data] >= pd.to_datetime(start)) &
+                    (df_f[col_data] <= pd.to_datetime(end))
+                ]
 
+    # Filtro de categoria
     if categoricas:
         col_cat = categoricas[0]
         st.markdown(f"**{T[lang]['filter_category']}:** {col_cat}")
@@ -190,31 +278,37 @@ def apply_advanced_filters(df, datas, categoricas, numericas, lang):
                     mask = mask | (df_f[col_cat].astype(str) == val)
             df_f = df_f[mask]
 
+    # Filtro numérico
     if numericas:
         st.subheader(T[lang]["filter_numeric"])
         col_num = st.selectbox(T[lang]["filter_numeric_col"], numericas)
-        min_val = float(df_f[col_num].min())
-        max_val = float(df_f[col_num].max())
-        val_range = st.slider(
-            T[lang]["filter_numeric_range"],
-            min_value=min_val,
-            max_value=max_val,
-            value=(min_val, max_val)
-        )
-        df_f = df_f[(df_f[col_num] >= val_range[0]) & (df_f[col_num] <= val_range[1])]
+        serie = df_f[col_num].dropna()
+        if not serie.empty:
+            min_val = float(serie.min())
+            max_val = float(serie.max())
+            val_range = st.slider(
+                T[lang]["filter_numeric_range"],
+                min_value=min_val,
+                max_value=max_val,
+                value=(min_val, max_val)
+            )
+            df_f = df_f[(df_f[col_num] >= val_range[0]) & (df_f[col_num] <= val_range[1])]
 
-        remove_out = st.checkbox(T[lang]["filter_outliers"])
-        if remove_out:
-            q1 = df_f[col_num].quantile(0.25)
-            q3 = df_f[col_num].quantile(0.75)
-            iqr = q3 - q1
-            lim_inf = q1 - 1.5 * iqr
-            lim_sup = q3 + 1.5 * iqr
-            df_f = df_f[(df_f[col_num] >= lim_inf) & (df_f[col_num] <= lim_sup)]
+            remove_out = st.checkbox(T[lang]["filter_outliers"])
+            if remove_out:
+                q1 = serie.quantile(0.25)
+                q3 = serie.quantile(0.75)
+                iqr = q3 - q1
+                lim_inf = q1 - 1.5 * iqr
+                lim_sup = q3 + 1.5 * iqr
+                df_f = df_f[(df_f[col_num] >= lim_inf) & (df_f[col_num] <= lim_sup)]
 
     st.markdown("---")
     return df_f
 
+# ---------------------------
+# TOGGLE DE IDIOMA
+# ---------------------------
 col_lang1, _ = st.columns([1, 3])
 with col_lang1:
     lang = st.radio(
@@ -226,6 +320,9 @@ with col_lang1:
 st.title(T[lang]["app_title"])
 st.write(T[lang]["app_subtitle"])
 
+# ---------------------------
+# UPLOAD
+# ---------------------------
 arquivo = st.file_uploader(T[lang]["upload_label"], type=["xlsx", "csv"], key="upload_unico")
 
 if not arquivo:
@@ -250,26 +347,27 @@ if df.empty:
     st.error(T[lang]["error_empty"])
     st.stop()
 
+# ---------------------------
+# LIMPEZA AUTOMÁTICA
+# ---------------------------
+df = limpar_planilha(df)
+
+if df.empty:
+    st.error("Após limpeza, a planilha ficou vazia. Verifique o arquivo de origem.")
+    st.stop()
+
 if df.columns.duplicated().any():
     st.warning(T[lang]["warn_dup_cols"])
     df.columns = [f"{col}_{i}" if df.columns.tolist().count(col) > 1 else col
                   for i, col in enumerate(df.columns)]
 
+# ---------------------------
+# DETECÇÃO DE TIPOS
+# ---------------------------
 datas = []
 for col in df.columns:
-    try:
-        convertido = pd.to_datetime(df[col], errors="raise", dayfirst=True)
-        df[col] = convertido
+    if pd.api.types.is_datetime64_any_dtype(df[col]):
         datas.append(col)
-    except:
-        pass
-
-for col in df.columns:
-    if df[col].dtype == object:
-        try:
-            df[col] = df[col].str.replace(".", "").str.replace(",", ".").astype(float)
-        except:
-            pass
 
 numericas = df.select_dtypes(include=["int64", "float64"]).columns.tolist()
 categoricas = df.select_dtypes(include=["object", "category"]).columns.tolist()
@@ -283,8 +381,14 @@ c1.write(f"**{T[lang]['num_cols']}:** {numericas if numericas else '-'}")
 c2.write(f"**{T[lang]['date_cols']}:** {datas if datas else '-'}")
 c3.write(f"**{T[lang]['cat_cols']}:** {categoricas if categoricas else '-'}")
 
+# ---------------------------
+# FILTROS AVANÇADOS
+# ---------------------------
 df_filtered = apply_advanced_filters(df, datas, categoricas, numericas, lang)
 
+# ---------------------------
+# INSIGHTS E ESTATÍSTICA
+# ---------------------------
 st.header(T[lang]["insights_title"])
 
 insights = []
@@ -318,6 +422,8 @@ if numericas:
         st.subheader(T[lang]["corr_title"])
         st.dataframe(corr.style.background_gradient(cmap="Blues"))
         insights.append(T[lang]["insight_corr"])
+else:
+    estatisticas_html = ""
 
 if datas:
     col_data = datas[0]
@@ -368,6 +474,9 @@ st.subheader(T[lang]["insights_list_title"])
 for item in insights:
     st.write("- " + item)
 
+# ---------------------------
+# GRÁFICOS (APENAS NO APP)
+# ---------------------------
 st.header(T[lang]["viz_title"])
 
 if numericas:
@@ -408,11 +517,16 @@ if datas and numericas:
         )
         st.plotly_chart(fig_line, use_container_width=True)
 
+# ---------------------------
+# PDF (SEM GRÁFICOS, TEXTO + TABELA)
+# ---------------------------
 st.header(T[lang]["pdf_title_section"])
 
 if st.button(T[lang]["pdf_button"]):
     now = datetime.now()
     data_atual = format_date(now, lang)
+
+    pdf_txt = T_PDF[lang]
 
     logo_svg = """
     <svg width="160" height="100" viewBox="0 0 200 120">
@@ -475,35 +589,35 @@ if st.button(T[lang]["pdf_button"]):
 
     <div class="capa">
         {logo_svg}
-        <h1>{T[lang]["pdf_cover_title"]}</h1>
-        <h3>{T[lang]["pdf_cover_sub"].format(date=data_atual)}</h3>
-        <h3>{T[lang]["pdf_cover_brand"]}</h3>
+        <h1>{pdf_txt["cover_title"]}</h1>
+        <h3>{pdf_txt["cover_sub"].format(date=data_atual)}</h3>
+        <h3>{pdf_txt["cover_brand"]}</h3>
     </div>
 
     <div class="header">
         <div>{logo_svg}</div>
-        <h2>{T[lang]["pdf_cover_brand"]}</h2>
+        <h2>{pdf_txt["cover_brand"]}</h2>
     </div>
 
-    <h2>{T[lang]["pdf_summary"]}</h2>
-    <p>{T[lang]["pdf_sum_1"]}</p>
-    <p>{T[lang]["pdf_sum_2"]}</p>
-    <p>{T[lang]["pdf_sum_3"]}</p>
-    <p>{T[lang]["pdf_sum_4"]}</p>
+    <h2>{pdf_txt["summary"]}</h2>
+    <p>{pdf_txt["sum_1"]}</p>
+    <p>{pdf_txt["sum_2"]}</p>
+    <p>{pdf_txt["sum_3"]}</p>
+    <p>{pdf_txt["sum_4"]}</p>
 
-    <h2>{T[lang]["pdf_stats_section"]}</h2>
-    {estatisticas_html if estatisticas_html else f"<p>{T[lang]['no_num_cols']}</p>"}
+    <h2>{pdf_txt["stats_section"]}</h2>
+    {estatisticas_html if estatisticas_html else f"<p>{pdf_txt['no_num_cols']}</p>"}
 
-    <h2>{T[lang]["pdf_insights_section"]}</h2>
+    <h2>{pdf_txt["insights_section"]}</h2>
     {''.join(f'<p>• {i}</p>' for i in insights)}
 
-    <h2>{T[lang]["pdf_outliers_section"]}</h2>
-    {outliers_info if outliers_info else f"<p>{T[lang]['no_outliers_info']}</p>"}
+    <h2>{pdf_txt["outliers_section"]}</h2>
+    {outliers_info if outliers_info else f"<p>{pdf_txt['no_outliers_info']}</p>"}
 
-    <h2>{T[lang]["pdf_table_section"]}</h2>
+    <h2>{pdf_txt["table_section"]}</h2>
     {df_filtered.head().to_html()}
 
-    <div class="footer">{T[lang]["footer_text"]}</div>
+    <div class="footer">{pdf_txt["footer"]}</div>
 
     </body>
     </html>
