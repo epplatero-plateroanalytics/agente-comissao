@@ -7,7 +7,7 @@ from core.insights import gerar_kpis, gerar_insights
 from core.dashboard.filters import aplicar_filtros
 from core.email.excel_exporter import exportar_excel
 from core.email.email_sender import enviar_email_com_anexo
-from pdf.pdf_engine_cloud import gerar_pdf
+from core.pdf.pdf_engine_cloud import gerar_pdf
 
 
 st.set_page_config(
