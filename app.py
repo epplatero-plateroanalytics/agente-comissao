@@ -63,6 +63,7 @@ T = {
         "insight_corr": "Foi calculada a correlação entre as variáveis numéricas para identificar relações lineares.",
         "insight_outliers": "Em {col}, foram detectados {qtd} possíveis outliers usando o método IQR."
     },
+
     "en": {
         "app_title": "Universal Spreadsheet Agent – Premium Version",
         "app_subtitle": "Upload a spreadsheet and generate advanced analysis, insights, and a professional PDF report.",
@@ -116,7 +117,9 @@ T = {
     }
 }
 
-# TEXTOS ESPECÍFICOS DO PDF (SEM ACENTOS PARA EVITAR QUEBRA)
+# ---------------------------
+# TEXTOS DO PDF (SEM ACENTOS)
+# ---------------------------
 T_PDF = {
     "pt": {
         "cover_title": "Relatorio Analitico",
@@ -135,6 +138,7 @@ T_PDF = {
         "no_num_cols": "Nao ha colunas numericas suficientes para estatisticas descritivas.",
         "no_outliers_info": "Nao foi possivel calcular outliers."
     },
+
     "en": {
         "cover_title": "Analytical Report",
         "cover_brand": "Platero Analytics — Data Intelligence",
@@ -153,12 +157,12 @@ T_PDF = {
         "no_outliers_info": "Outliers could not be calculated."
     }
 }
-
 # ---------------------------
-# FUNÇÃO DE LIMPEZA UNIVERSAL
+# FUNÇÃO DE LIMPEZA UNIVERSAL (VERSÃO CORRIGIDA)
 # ---------------------------
 def limpar_planilha(df):
     import numpy as np
+    import pandas as pd
 
     # Remove linhas totalmente vazias
     df = df.dropna(how="all")
@@ -169,7 +173,7 @@ def limpar_planilha(df):
     if df.empty:
         return df
 
-    # Detecta melhor linha de cabeçalho (mais células não vazias nas primeiras 10 linhas)
+    # Detecta melhor linha de cabeçalho (mais células preenchidas)
     melhor_linha = 0
     melhor_score = -1
     for i in range(min(10, len(df))):
@@ -179,16 +183,29 @@ def limpar_planilha(df):
             melhor_score = score
             melhor_linha = i
 
-    df.columns = df.iloc[melhor_linha].astype(str).str.strip()
+    # Define cabeçalho real
+    df.columns = df.iloc[melhor_linha].astype(str).fillna("").str.strip()
     df = df.iloc[melhor_linha + 1 :]
 
-    # Remove colunas Unnamed
+    # Garante que todos os nomes de colunas são strings válidas
     df.columns = [
-        col if not str(col).lower().startswith("unnamed") else f"coluna_{i}"
+        str(c).strip() if c is not None else f"coluna_{i}"
+        for i, c in enumerate(df.columns)
+    ]
+
+    # Substitui nomes vazios ou inválidos
+    df.columns = [
+        col if col not in ["", "nan", "None"] else f"coluna_{i}"
         for i, col in enumerate(df.columns)
     ]
 
-    # Limpa nomes de colunas
+    # Remove colunas Unnamed
+    df.columns = [
+        col if not col.lower().startswith("unnamed") else f"coluna_{i}"
+        for i, col in enumerate(df.columns)
+    ]
+
+    # Limpa nomes
     df.columns = (
         pd.Series(df.columns)
         .str.replace("\n", " ", regex=False)
@@ -200,14 +217,14 @@ def limpar_planilha(df):
 
     # Converte números com vírgula
     for col in df.columns:
-        if df[col].dtype == object:
-            s = df[col].astype(str)
-            s = s.str.replace(".", "", regex=False)
-            s = s.str.replace(",", ".", regex=False)
-            try:
-                df[col] = s.astype(float)
-            except:
-                pass
+        try:
+            if df[col].dtype == object:
+                s = df[col].astype(str)
+                s = s.str.replace(".", "", regex=False)
+                s = s.str.replace(",", ".", regex=False)
+                df[col] = pd.to_numeric(s, errors="ignore")
+        except:
+            pass
 
     # Converte datas
     for col in df.columns:
@@ -219,8 +236,9 @@ def limpar_planilha(df):
     df = df.dropna(how="all").reset_index(drop=True)
     return df
 
+
 # ---------------------------
-# FUNÇÕES AUXILIARES
+# FUNÇÃO AUXILIAR: FORMATAR DATA POR IDIOMA
 # ---------------------------
 def format_date(dt, lang):
     if pd.isna(dt):
@@ -230,6 +248,10 @@ def format_date(dt, lang):
     else:
         return dt.strftime("%b %d, %Y")
 
+
+# ---------------------------
+# FUNÇÃO AUXILIAR: FILTROS AVANÇADOS
+# ---------------------------
 def apply_advanced_filters(df, datas, categoricas, numericas, lang):
     df_f = df.copy()
     st.subheader(T[lang]["filters_title"])
@@ -239,6 +261,7 @@ def apply_advanced_filters(df, datas, categoricas, numericas, lang):
         col_data = datas[0]
         min_date = df_f[col_data].min()
         max_date = df_f[col_data].max()
+
         if pd.notna(min_date) and pd.notna(max_date):
             date_range = st.date_input(
                 T[lang]["filter_date_range"],
@@ -255,6 +278,7 @@ def apply_advanced_filters(df, datas, categoricas, numericas, lang):
     if categoricas:
         col_cat = categoricas[0]
         st.markdown(f"**{T[lang]['filter_category']}:** {col_cat}")
+
         unique_vals = sorted(df_f[col_cat].dropna().astype(str).unique().tolist())
         selected_vals = st.multiselect(
             T[lang]["filter_category"],
@@ -282,18 +306,22 @@ def apply_advanced_filters(df, datas, categoricas, numericas, lang):
     if numericas:
         st.subheader(T[lang]["filter_numeric"])
         col_num = st.selectbox(T[lang]["filter_numeric_col"], numericas)
+
         serie = df_f[col_num].dropna()
         if not serie.empty:
             min_val = float(serie.min())
             max_val = float(serie.max())
+
             val_range = st.slider(
                 T[lang]["filter_numeric_range"],
                 min_value=min_val,
                 max_value=max_val,
                 value=(min_val, max_val)
             )
+
             df_f = df_f[(df_f[col_num] >= val_range[0]) & (df_f[col_num] <= val_range[1])]
 
+            # Remover outliers
             remove_out = st.checkbox(T[lang]["filter_outliers"])
             if remove_out:
                 q1 = serie.quantile(0.25)
@@ -305,7 +333,6 @@ def apply_advanced_filters(df, datas, categoricas, numericas, lang):
 
     st.markdown("---")
     return df_f
-
 # ---------------------------
 # TOGGLE DE IDIOMA
 # ---------------------------
@@ -320,8 +347,9 @@ with col_lang1:
 st.title(T[lang]["app_title"])
 st.write(T[lang]["app_subtitle"])
 
+
 # ---------------------------
-# UPLOAD
+# UPLOAD DO ARQUIVO
 # ---------------------------
 arquivo = st.file_uploader(T[lang]["upload_label"], type=["xlsx", "csv"], key="upload_unico")
 
@@ -331,6 +359,9 @@ if not arquivo:
 
 nome = arquivo.name.lower()
 
+# ---------------------------
+# LEITURA SEGURA DO ARQUIVO
+# ---------------------------
 try:
     if nome.endswith(".xlsx"):
         df = pd.read_excel(arquivo)
@@ -347,8 +378,9 @@ if df.empty:
     st.error(T[lang]["error_empty"])
     st.stop()
 
+
 # ---------------------------
-# LIMPEZA AUTOMÁTICA
+# LIMPEZA AUTOMÁTICA UNIVERSAL
 # ---------------------------
 df = limpar_planilha(df)
 
@@ -356,10 +388,17 @@ if df.empty:
     st.error("Após limpeza, a planilha ficou vazia. Verifique o arquivo de origem.")
     st.stop()
 
+
+# ---------------------------
+# TRATAR COLUNAS DUPLICADAS
+# ---------------------------
 if df.columns.duplicated().any():
     st.warning(T[lang]["warn_dup_cols"])
-    df.columns = [f"{col}_{i}" if df.columns.tolist().count(col) > 1 else col
-                  for i, col in enumerate(df.columns)]
+    df.columns = [
+        f"{col}_{i}" if df.columns.tolist().count(col) > 1 else col
+        for i, col in enumerate(df.columns)
+    ]
+
 
 # ---------------------------
 # DETECÇÃO DE TIPOS
@@ -372,19 +411,28 @@ for col in df.columns:
 numericas = df.select_dtypes(include=["int64", "float64"]).columns.tolist()
 categoricas = df.select_dtypes(include=["object", "category"]).columns.tolist()
 
+
+# ---------------------------
+# PRÉVIA DOS DADOS
+# ---------------------------
 st.subheader(T[lang]["preview_title"])
 st.dataframe(df.head())
 
+
+# ---------------------------
+# TIPOS DE COLUNAS
+# ---------------------------
 st.subheader(T[lang]["types_title"])
 c1, c2, c3 = st.columns(3)
+
 c1.write(f"**{T[lang]['num_cols']}:** {numericas if numericas else '-'}")
 c2.write(f"**{T[lang]['date_cols']}:** {datas if datas else '-'}")
 c3.write(f"**{T[lang]['cat_cols']}:** {categoricas if categoricas else '-'}")
-
 # ---------------------------
 # FILTROS AVANÇADOS
 # ---------------------------
 df_filtered = apply_advanced_filters(df, datas, categoricas, numericas, lang)
+
 
 # ---------------------------
 # INSIGHTS E ESTATÍSTICA
@@ -395,42 +443,64 @@ insights = []
 estatisticas_html = ""
 outliers_info = ""
 
+
+# ---------------------------
+# ESTATÍSTICAS DESCRITIVAS
+# ---------------------------
 if numericas:
     desc = df_filtered[numericas].describe().T
     desc["coef_var"] = desc["std"] / desc["mean"]
+
     estatisticas_html = desc.to_html(float_format=lambda x: f"{x:,.2f}")
+
     st.subheader(T[lang]["stats_title"])
     st.dataframe(desc)
 
+    # Insights numéricos
     for col in numericas:
         serie = df_filtered[col].dropna()
         if serie.empty:
             continue
+
         media = serie.mean()
         mediana = serie.median()
         maximo = serie.max()
         minimo = serie.min()
         desvio = serie.std()
+
         insights.append(
             T[lang]["insight_num"].format(
-                col=col, mean=media, median=mediana, std=desvio, min=minimo, max=maximo
+                col=col,
+                mean=media,
+                median=mediana,
+                std=desvio,
+                min=minimo,
+                max=maximo
             )
         )
 
+    # Correlação
     if len(numericas) > 1:
         corr = df_filtered[numericas].corr()
         st.subheader(T[lang]["corr_title"])
         st.dataframe(corr.style.background_gradient(cmap="Blues"))
         insights.append(T[lang]["insight_corr"])
+
 else:
     estatisticas_html = ""
 
+
+# ---------------------------
+# INSIGHT DE PERÍODO (DATAS)
+# ---------------------------
 if datas:
     col_data = datas[0]
     serie_data = df_filtered[col_data].dropna()
+
     if not serie_data.empty:
         inicio = serie_data.min()
         fim = serie_data.max()
+
         insights.append(
             T[lang]["insight_period"].format(
                 start=format_date(inicio, lang),
@@ -438,43 +508,70 @@ if datas:
             )
         )
 
+
+# ---------------------------
+# TOP CATEGORIAS
+# ---------------------------
 if categoricas and numericas:
     col_cat = categoricas[0]
     col_val = numericas[0]
-    agrupado = df_filtered.groupby(col_cat)[col_val].sum().sort_values(ascending=False).head(5)
+
+    agrupado = (
+        df_filtered.groupby(col_cat)[col_val]
+        .sum()
+        .sort_values(ascending=False)
+        .head(5)
+    )
+
     st.subheader(T[lang]["top_cat_title"].format(cat=col_cat, val=col_val))
     st.dataframe(agrupado)
+
     insights.append(
         T[lang]["insight_topcat"].format(cat=col_cat, val=col_val)
     )
 
+
+# ---------------------------
+# OUTLIERS (IQR)
+# ---------------------------
 if numericas:
     outliers_info = "<ul>"
+
     for col in numericas:
         serie = df_filtered[col].dropna()
         if serie.empty:
             continue
+
         q1 = serie.quantile(0.25)
         q3 = serie.quantile(0.75)
         iqr = q3 - q1
+
         lim_inf = q1 - 1.5 * iqr
         lim_sup = q3 + 1.5 * iqr
+
         qtd_out = serie[(serie < lim_inf) | (serie > lim_sup)].shape[0]
+
         if lang == "pt":
             outliers_info += f"<li>{col}: {qtd_out} possiveis outliers detectados (IQR).</li>"
         else:
             outliers_info += f"<li>{col}: {qtd_out} potential outliers detected (IQR).</li>"
+
         if qtd_out > 0:
             insights.append(
                 T[lang]["insight_outliers"].format(col=col, qtd=qtd_out)
             )
+
     outliers_info += "</ul>"
 
-st.subheader(T[lang]["insights_list_title"])
-for item in insights:
-    st.write("- " + item)
 
 # ---------------------------
+# EXIBIR INSIGHTS
+# ---------------------------
+st.subheader(T[lang]["insights_list_title"])
+
+for item in insights:
+    st.write("- " + item)
+    # ---------------------------
 # GRÁFICOS (APENAS NO APP)
 # ---------------------------
 st.header(T[lang]["viz_title"])
@@ -482,52 +579,74 @@ st.header(T[lang]["viz_title"])
 if numericas:
     col_num = st.selectbox(T[lang]["select_num_col"], numericas)
 
+    # Histograma
     fig_hist = px.histogram(
-        df_filtered, x=col_num,
+        df_filtered,
+        x=col_num,
         nbins=30,
         title=T[lang]["hist_title"].format(col=col_num)
     )
     st.plotly_chart(fig_hist, use_container_width=True)
 
+    # Boxplot por categoria
     if categoricas:
         col_cat_box = categoricas[0]
         fig_box = px.box(
-            df_filtered, x=col_cat_box, y=col_num,
+            df_filtered,
+            x=col_cat_box,
+            y=col_num,
             title=T[lang]["box_title"].format(col=col_num, cat=col_cat_box)
         )
         st.plotly_chart(fig_box, use_container_width=True)
 
+    # Barras por categoria
     if categoricas:
         col_cat_bar = categoricas[0]
-        df_bar = df_filtered.groupby(col_cat_bar)[col_num].sum().reset_index()
+        df_bar = (
+            df_filtered.groupby(col_cat_bar)[col_num]
+            .sum()
+            .reset_index()
+        )
         fig_bar = px.bar(
-            df_bar, x=col_cat_bar, y=col_num,
+            df_bar,
+            x=col_cat_bar,
+            y=col_num,
             title=T[lang]["bar_title"].format(col=col_num, cat=col_cat_bar)
         )
         st.plotly_chart(fig_bar, use_container_width=True)
 
+# Série temporal
 if datas and numericas:
     col_data = datas[0]
     col_valor = numericas[0]
-    df_temp = df_filtered[[col_data, col_valor]].dropna().sort_values(by=col_data)
+
+    df_temp = (
+        df_filtered[[col_data, col_valor]]
+        .dropna()
+        .sort_values(by=col_data)
+    )
+
     if not df_temp.empty:
         fig_line = px.line(
-            df_temp, x=col_data, y=col_valor,
+            df_temp,
+            x=col_data,
+            y=col_valor,
             title=T[lang]["line_title"].format(col=col_valor)
         )
         st.plotly_chart(fig_line, use_container_width=True)
-
-# ---------------------------
-# PDF (SEM GRÁFICOS, TEXTO + TABELA)
+        # ---------------------------
+# PDF (SEM GRÁFICOS — TEXTO + TABELA)
 # ---------------------------
 st.header(T[lang]["pdf_title_section"])
 
 if st.button(T[lang]["pdf_button"]):
+
     now = datetime.now()
     data_atual = format_date(now, lang)
 
     pdf_txt = T_PDF[lang]
 
+    # Logo vetorial
     logo_svg = """
     <svg width="160" height="100" viewBox="0 0 200 120">
         <rect x="20" y="60" width="25" height="40" fill="#003366"/>
@@ -543,6 +662,7 @@ if st.button(T[lang]["pdf_button"]):
     </svg>
     """
 
+    # HTML do PDF
     html = f"""
     <html>
     <head>
@@ -587,6 +707,7 @@ if st.button(T[lang]["pdf_button"]):
     </head>
     <body>
 
+    <!-- CAPA -->
     <div class="capa">
         {logo_svg}
         <h1>{pdf_txt["cover_title"]}</h1>
@@ -594,26 +715,32 @@ if st.button(T[lang]["pdf_button"]):
         <h3>{pdf_txt["cover_brand"]}</h3>
     </div>
 
+    <!-- CABEÇALHO -->
     <div class="header">
         <div>{logo_svg}</div>
         <h2>{pdf_txt["cover_brand"]}</h2>
     </div>
 
+    <!-- SUMÁRIO -->
     <h2>{pdf_txt["summary"]}</h2>
     <p>{pdf_txt["sum_1"]}</p>
     <p>{pdf_txt["sum_2"]}</p>
     <p>{pdf_txt["sum_3"]}</p>
     <p>{pdf_txt["sum_4"]}</p>
 
+    <!-- ESTATÍSTICAS -->
     <h2>{pdf_txt["stats_section"]}</h2>
     {estatisticas_html if estatisticas_html else f"<p>{pdf_txt['no_num_cols']}</p>"}
 
+    <!-- INSIGHTS -->
     <h2>{pdf_txt["insights_section"]}</h2>
     {''.join(f'<p>• {i}</p>' for i in insights)}
 
+    <!-- OUTLIERS -->
     <h2>{pdf_txt["outliers_section"]}</h2>
     {outliers_info if outliers_info else f"<p>{pdf_txt['no_outliers_info']}</p>"}
 
+    <!-- PRIMEIRAS LINHAS -->
     <h2>{pdf_txt["table_section"]}</h2>
     {df_filtered.head().to_html()}
 
@@ -623,22 +750,32 @@ if st.button(T[lang]["pdf_button"]):
     </html>
     """
 
+    # Criar arquivo temporário HTML
     with tempfile.NamedTemporaryFile(delete=False, suffix=".html") as tmp_html:
         tmp_html.write(html.encode("utf-8"))
         tmp_html_path = tmp_html.name
 
+    # Caminho do PDF
     pdf_path = tmp_html_path.replace(".html", ".pdf")
 
+    # Opções do PDF
     options = {
         "encoding": "UTF-8",
         "footer-center": "[page]",
         "footer-font-size": "10"
     }
 
+    # Gerar PDF
     pdfkit.from_file(tmp_html_path, pdf_path, options=options)
 
+    # Ler PDF
     with open(pdf_path, "rb") as f:
         pdf_bytes = f.read()
 
+    # Botão de download
     st.success(T[lang]["pdf_success"])
-    st.download_button(T[lang]["pdf_download"], data=pdf_bytes, file_name="relatorio_profissional.pdf")
+    st.download_button(
+        T[lang]["pdf_download"],
+        data=pdf_bytes,
+        file_name="relatorio_profissional.pdf"
+    )
