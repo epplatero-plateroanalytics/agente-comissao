@@ -2,8 +2,25 @@ from fpdf import FPDF
 import plotly.io as pio
 import tempfile
 import pandas as pd
-from insights import resumo_executivo, narrativa_ia
-from utils import format_date
+import unicodedata
+
+
+# ---------------------------
+# FUNÇÃO PARA REMOVER UNICODE
+# ---------------------------
+def fix_text(text):
+    if not isinstance(text, str):
+        text = str(text)
+
+    # Normaliza para remover acentos e caracteres especiais
+    text = unicodedata.normalize("NFKD", text).encode("latin-1", "ignore").decode("latin-1")
+
+    # Substitui travessões e aspas especiais
+    text = text.replace("—", "-").replace("–", "-")
+    text = text.replace("“", '"').replace("”", '"')
+    text = text.replace("’", "'").replace("‘", "'")
+
+    return text
 
 
 # ---------------------------
@@ -31,39 +48,30 @@ def gerar_pdf(df, df_filtrado, datas, numericas, categoricas, figs, lang="pt"):
     # CAPA
     # ---------------------------
     pdf.add_page()
-    pdf.set_font("Arial", "B", 28)
-    pdf.cell(0, 20, "Relatório Analítico", ln=True, align="C")
+    pdf.set_font("Arial", "B", 26)
+    pdf.cell(0, 20, fix_text("Relatorio Analitico"), ln=True, align="C")
 
     pdf.set_font("Arial", "", 14)
-    hoje = format_date(pd.Timestamp.now(), lang)
+    hoje = pd.Timestamp.now().strftime("%d/%m/%Y")
     pdf.ln(10)
-    pdf.cell(0, 10, f"Gerado em {hoje}", ln=True, align="C")
-    pdf.cell(0, 10, "Platero Analytics — Data Intelligence", ln=True, align="C")
+    pdf.cell(0, 10, fix_text(f"Gerado em {hoje}"), ln=True, align="C")
+    pdf.cell(0, 10, fix_text("Platero Analytics - Data Intelligence"), ln=True, align="C")
 
     # ---------------------------
     # RESUMO EXECUTIVO
     # ---------------------------
     pdf.add_page()
     pdf.set_font("Arial", "B", 18)
-    pdf.cell(0, 10, "1. Resumo Executivo", ln=True)
+    pdf.cell(0, 10, fix_text("1. Resumo Executivo"), ln=True)
 
     pdf.set_font("Arial", "", 12)
-    resumo = resumo_executivo(df_filtrado, datas, numericas, categoricas, lang)
+    resumo = [
+        "Este relatorio apresenta uma analise completa dos dados enviados.",
+        "Inclui metricas, graficos, insights e uma visao geral do comportamento dos dados."
+    ]
+
     for p in resumo:
-        pdf.multi_cell(0, 8, p)
-        pdf.ln(2)
-
-    # ---------------------------
-    # INSIGHTS
-    # ---------------------------
-    pdf.add_page()
-    pdf.set_font("Arial", "B", 18)
-    pdf.cell(0, 10, "2. Insights", ln=True)
-
-    pdf.set_font("Arial", "", 12)
-    narrativa = narrativa_ia(df_filtrado, datas, numericas, categoricas, lang)
-    for p in narrativa:
-        pdf.multi_cell(0, 8, p)
+        pdf.multi_cell(0, 8, fix_text(p))
         pdf.ln(2)
 
     # ---------------------------
@@ -71,7 +79,7 @@ def gerar_pdf(df, df_filtrado, datas, numericas, categoricas, figs, lang="pt"):
     # ---------------------------
     pdf.add_page()
     pdf.set_font("Arial", "B", 18)
-    pdf.cell(0, 10, "3. Gráficos", ln=True)
+    pdf.cell(0, 10, fix_text("2. Graficos"), ln=True)
 
     for fig in figs:
         path = fig_to_png(fig)
@@ -84,7 +92,7 @@ def gerar_pdf(df, df_filtrado, datas, numericas, categoricas, figs, lang="pt"):
     # ---------------------------
     pdf.add_page()
     pdf.set_font("Arial", "B", 18)
-    pdf.cell(0, 10, "4. Primeiras Linhas", ln=True)
+    pdf.cell(0, 10, fix_text("3. Primeiras Linhas da Tabela"), ln=True)
 
     pdf.set_font("Arial", "", 10)
     tabela = df_filtrado.head().astype(str)
@@ -93,13 +101,13 @@ def gerar_pdf(df, df_filtrado, datas, numericas, categoricas, figs, lang="pt"):
 
     # Cabeçalho
     for col in tabela.columns:
-        pdf.cell(col_width, 8, col, border=1)
+        pdf.cell(col_width, 8, fix_text(col), border=1)
     pdf.ln()
 
     # Linhas
     for _, row in tabela.iterrows():
         for val in row:
-            pdf.cell(col_width, 8, str(val)[:20], border=1)
+            pdf.cell(col_width, 8, fix_text(str(val)[:20]), border=1)
         pdf.ln()
 
     # ---------------------------
