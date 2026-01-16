@@ -4,7 +4,7 @@ import pandas as pd
 from core.cleaner import limpar_planilha
 from core.utils import detectar_tipos
 from core.insights import gerar_kpis, gerar_insights
-from dashboard.filters import aplicar_filtros
+from core.dashboard.filters import aplicar_filtros
 from export.excel_exporter import exportar_excel
 from email.email_sender import enviar_email_com_anexo
 from pdf.pdf_engine_cloud import gerar_pdf
