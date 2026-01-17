@@ -47,5 +47,4 @@ def aplicar_filtros(df, datas, numericas, categoricas):
              def aplicar_filtros(df):
     # ... lógica de filtros ...
     # (Seu código de filtro aqui)
-    
-    return df  # <--- VOCÊ PRECISA ADICIONAR ISSO NO FINAL
+return df  #
