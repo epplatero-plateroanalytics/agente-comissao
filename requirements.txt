@@ -5,3 +5,4 @@ matplotlib
 fpdf2
 xlsxwriter
 python-dateutil
+openpyxl
