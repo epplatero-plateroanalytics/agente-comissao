@@ -1,50 +1,31 @@
 import streamlit as st
 import pandas as pd
 
-def aplicar_filtros(df, datas, numericas, categoricas):
-    st.subheader("🎛️ Filtros Interativos")
+def aplicar_filtros(df):
+    st.sidebar.header("Filtros")
+    
+    # Se o DataFrame estiver vazio, retorna ele mesmo para evitar erros
+    if df is None or df.empty:
+        return df
 
     df_filtrado = df.copy()
 
-    with st.expander("Filtros avançados", expanded=False):
+    # Criação dinâmica de filtros para colunas "Object" (Texto)
+    # Você pode personalizar isso, mas aqui está um exemplo genérico seguro
+    colunas_texto = df_filtrado.select_dtypes(include=['object']).columns
 
-        # Filtros para datas
-        if datas:
-            st.markdown("### 📅 Filtros de Datas")
-            for col in datas:
-                try:
-                    min_data = df[col].min()
-                    max_data = df[col].max()
+    for col in colunas_texto:
+        # Pega valores únicos para o filtro
+        valores = df_filtrado[col].unique()
+        
+        # Cria o multiselect na barra lateral
+        selecionados = st.sidebar.multiselect(f"Filtrar {col}", valores)
+        
+        # Se o usuário selecionou algo, aplica o filtro
+        if selecionados:
+            df_filtrado = df_filtrado[df_filtrado[col].isin(selecionados)]
 
-                    intervalo = st.date_input(
-                        f"Intervalo para {col}",
-                        value=(min_data, max_data)
-                    )
-
-                    if isinstance(intervalo, tuple) and len(intervalo) == 2:
-                        inicio, fim = intervalo
-                        df_filtrado = df_filtrado[
-                            (df_filtrado[col] >= pd.to_datetime(inicio)) &
-                            (df_filtrado[col] <= pd.to_datetime(fim))
-                        ]
-                except:
-                    pass
-
-        # Filtros para numéricas
-        if numericas:
-            st.markdown("### 🔢 Filtros Numéricos")
-            for col in numericas:
-                minimo = float(df[col].min())
-                maximo = float(df[col].max())
-
-                faixa = st.slider(
-                    f"Intervalo para {col}",
-                    min_value=minimo,
-                    max_value=maximo,
-                    value=(minimo, maximo)
-                )
-
-             def aplicar_filtros(df):
-    # ... lógica de filtros ...
-    # (Seu código de filtro aqui)
-return df  #
+    # --- O PULO DO GATO ESTÁ AQUI EMBAIXO ---
+    # O 'return' deve estar alinhado na mesma direção do 'st' e do 'if' lá em cima
+    # (Geralmente 4 espaços da margem esquerda)
+    return df_filtrado
